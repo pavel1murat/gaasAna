@@ -1,0 +1,32 @@
+#!/bin/bash
+
+dir=include
+
+package=gaasAna
+
+# echo pwd  `pwd`
+
+#------------------------------------------------------------------------------
+# 'gaasAna' and its subpackages
+#------------------------------------------------------------------------------
+if [ ! -d ../$dir/$package ] ; then mkdir -p ../$dir/$package ; fi
+
+for d in ana obj ; do
+    if [ ! -e ../$dir/$package/$d ] ; then 
+	echo `pwd`$0 : creating symbolic link ../$dir/$package/$d
+	ln -s ../../$package/$d/$d ../$dir/$package/$d
+    fi
+done
+
+#------------------------------------------------------------------------------
+# murat/Stntuple and its subpackages
+#------------------------------------------------------------------------------
+# if [ ! -d ../$dir/Stntuple ] ; then mkdir -p ../$dir/Stntuple ; fi
+# 
+# # for d in alg base gui loop mod obj val ; do
+# for d in alg base loop mod obj val ; do
+#     if [ ! -e ../$dir/Stntuple/$d ] ; then 
+# 	echo `pwd`$0 : creating symbolic link ../$dir/Stntuple/$d
+# 	ln -s ../../murat/Stntuple/$d/$d ../$dir/Stntuple/$d
+#     fi
+# done
