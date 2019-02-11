@@ -41,17 +41,22 @@ void TGaasHeaderBlock::Streamer(TBuffer &R__b)
 }
 
 //------------------------------------------------------------------------------
-TGaasHeaderBlock::TGaasHeaderBlock():
+TGaasHeaderBlock::TGaasHeaderBlock(): TStnDataBlock(), 
   fEventNumber     (-1),
   fRunNumber       (-1),
   fSubrunNumber    (-1),
-  fStnVersion      (""),
-  fLastEventNumber (-1),
-  fLastSubrunNumber(-1),
-  fLastRunNumber   (-1)
+  fStnVersion      ("")
 {
-  for (int i=0; i<kNFreeInts  ; i++) fInt  [i] = -1;
-  for (int i=0; i<kNFreeFloats; i++) fFloat[i] = -1;
+  fVersion      = -1;
+  fMcFlag       =  0;
+  fGoodRun      =  0;
+  fBrCode       =  0;
+  fGoodTrig     =  0;
+  fTrigWord     =  0;
+  fCpu          =  0;
+
+  for (int i=0; i<kNFreeInts  ; i++) fInt  [i] = 0;
+  for (int i=0; i<kNFreeFloats; i++) fFloat[i] = 0;
 }
 
 
@@ -73,14 +78,14 @@ void TGaasHeaderBlock::Print(Option_t* opt) const {
 
   TGaasHeaderBlock* block = (TGaasHeaderBlock*) this;
 
-  if ((fLastEventNumber       == fEventNumber ) && 
-      (fLastRunNumber         == fRunNumber   ) &&
-      (fLastSubrunNumber      == fSubrunNumber) &&
+  if ((f_EventNumber       == fEventNumber ) && 
+      (f_RunNumber         == fRunNumber   ) &&
+      (f_SubrunNumber      == fSubrunNumber) &&
       (strcmp(opt,f_last_opt) == 0            )    ) return;
 
-  block->fLastEventNumber  = fEventNumber;
-  block->fLastSubrunNumber = fSubrunNumber;
-  block->fLastRunNumber    = fRunNumber;
+  block->f_EventNumber  = fEventNumber;
+  block->f_SubrunNumber = fSubrunNumber;
+  block->f_RunNumber    = fRunNumber;
   strncpy(f_last_opt,opt,1000);
 
   printf(" *** Run,Subrun,Event: %6i,%-9i,%7i : %s\n", 

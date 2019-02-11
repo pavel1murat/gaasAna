@@ -11,19 +11,17 @@
 
 class TGaasDataBlock: public TStnDataBlock {
 public:
+
+  friend class InitGaasDataBlock;
   
-//   friend Int_t TGaas::InitVme1742DataBlock(TStnDataBlock* block, 
-// 					      AbsEvent*      event, 
-// 					      int            mode);
   enum {
 	kNFreeInts   =  5,                    // put in starting right from version 1
 	kNFreeFloats =  5
   };
 
 protected:
-
-  int             fNSamples;		// number of samples in the waveform
   int             fNChannels;		// number of channels
+  int             fNSamples;		// number of samples in the waveform
   int             fTriggerSample;       // sample on which the scope triggered
   int             fInt  [kNFreeInts  ]; // provision for future I/O expansion
   float           fSampleTime;		// sampling time, sec
@@ -55,8 +53,8 @@ public:
 //-----------------------------------------------------------------------------
 // overloaded methods of TObject
 //-----------------------------------------------------------------------------
-  void    Clear(Option_t* opt = "");
-  void    Print(Option_t* opt = "") const;
+  virtual void    Clear(Option_t* opt = "");
+  virtual void    Print(Option_t* opt = "") const;
 
   ClassDef(TGaasDataBlock,1)	// oscilloscope data block
 };

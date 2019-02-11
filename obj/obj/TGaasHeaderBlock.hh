@@ -8,6 +8,8 @@
 
 class TGaasHeaderBlock: public TStnDataBlock {
 public:
+
+  friend class InitGaasHeaderBlock;
   
 //   friend Int_t TGaas::InitVme1742DataBlock(TStnDataBlock* block, 
 // 					      AbsEvent*      event, 
@@ -32,12 +34,6 @@ protected:
   int               fInt  [kNFreeInts  ]; // provision for future I/O expansion
   float             fFloat[kNFreeFloats]; // provision for future I/O expansion
   TString           fStnVersion;          // STNTUPLE version, like "dev_243_16"
-//------------------------------------------------------------------------------
-//  transient data, all persistent should go above
-//------------------------------------------------------------------------------
-  Int_t             fLastEventNumber;	  //! event/subrun/run numbers for the last printed event
-  Int_t             fLastSubrunNumber;	  //! 
-  Int_t             fLastRunNumber;	  //! 
 //-----------------------------------------------------------------------------
 //  functions
 //-----------------------------------------------------------------------------
@@ -66,8 +62,8 @@ public:
 //-----------------------------------------------------------------------------
 // overloaded methods of TObject
 //-----------------------------------------------------------------------------
-  void    Clear(Option_t* opt = "");
-  void    Print(Option_t* opt = "") const;
+  virtual void    Clear(Option_t* opt = "");
+  virtual void    Print(Option_t* opt = "") const;
 
   ClassDef(TGaasHeaderBlock,1)	// Event Header block for GaAs data
 };

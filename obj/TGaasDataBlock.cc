@@ -34,7 +34,16 @@ void TGaasDataBlock::Streamer(TBuffer &R__b) {
 
 
 //_____________________________________________________________________________
-TGaasDataBlock::TGaasDataBlock() {
+TGaasDataBlock::TGaasDataBlock(): TStnDataBlock() {
+  fNSamples      = -1;
+  fNChannels     = -1;
+  fTriggerSample = -1;
+
+  fSampleTime    = -1.;
+  fTriggerTime   = -1.;
+  
+  for (int i=0; i<kNFreeInts  ; i++) fInt  [i] = 0;
+  for (int i=0; i<kNFreeFloats; i++) fFloat[i] = 0;
 }
 
 //_____________________________________________________________________________
