@@ -11,13 +11,13 @@ void TGaasDataBlock::Streamer(TBuffer &R__b) {
   // Stream an object of class TGaasDataBlock
   // current version: V1
 
-  int nwi     = ((Int_t*  )&fSampleTime)-&fNSamples;
+  int nwi     = ((Int_t*  )&fSampleTime)-&fNChannels;
   int nwf     = ((Float_t*)&fT         )-&fSampleTime;
 
   if (R__b.IsReading()) {
     Version_t R__v = R__b.ReadVersion(); if (R__v) { }
     
-    R__b.ReadFastArray(&fNSamples,nwi);
+    R__b.ReadFastArray(&fNChannels,nwi);
     R__b.ReadFastArray(&fSampleTime,nwf);
     fT.Streamer(R__b);
     fV.Streamer(R__b);
@@ -25,13 +25,12 @@ void TGaasDataBlock::Streamer(TBuffer &R__b) {
   else {
     R__b.WriteVersion(TGaasDataBlock::IsA());
 
-    R__b.WriteFastArray(&fNSamples,nwi);
+    R__b.WriteFastArray(&fNChannels ,nwi);
     R__b.WriteFastArray(&fSampleTime,nwf);
     fT.Streamer(R__b);
     fV.Streamer(R__b);
   }
 }
-
 
 //_____________________________________________________________________________
 TGaasDataBlock::TGaasDataBlock(): TStnDataBlock() {
@@ -66,5 +65,42 @@ void  TGaasDataBlock::Clear(Option_t* opt)  {
 
 //_____________________________________________________________________________
 void  TGaasDataBlock::Print(Option_t* opt) const {
-  printf(" TGaasDataBlock::Print ERROR: not implemented yet! \n");
+  printf("   ns      stns    nCh    trigS  ttime \n");
+  printf(" ---------------------------- \n");
+  float ttns  = fTriggerTime*1e9;
+  float stns  = fSampleTime*1e9;
+  
+  printf(" %4i %12.5f %3i %4i %12.5f\n",fNSamples,stns,fNChannels,fTriggerSample,ttns);
+//-----------------------------------------------------------------------------
+// print times
+//-----------------------------------------------------------------------------
+  printf("------ times: \n");
+  
+  int nw = 0;
+  for (int i=0; i<fNSamples; i++) {
+    printf(" %7.3f",fT(i)*1.e9);
+    nw++;
+    if (nw >= 20) {
+      printf("\n");
+      nw = 0;
+    }
+  }
+
+  if (nw > 0) printf("\n");
+//-----------------------------------------------------------------------------
+// print waveform - so far - just one, the first one
+//-----------------------------------------------------------------------------
+  printf("------ waveform: \n");
+  nw = 0;
+  for (int i=0; i<fNSamples; i++) {
+    printf(" %7.3f",fV(0,i)*1.e3);
+    nw++;
+    if (nw >= 20) {
+      printf("\n");
+      nw = 0;
+    }
+  }
+
+  if (nw > 0) printf("\n");
+  
 }

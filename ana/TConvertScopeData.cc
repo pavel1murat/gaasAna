@@ -211,7 +211,7 @@ int TConvertScopeData::ReadGaasData(const char* Dirname, int RunNumber, const ch
   fScopeEvent.fTrigWord     = 0;
   fScopeEvent.fCpu          = 0;
   fScopeEvent.fStnVersion   = "v7_3_0";
-
+					// assume number of channels doesn't change within the run
   fScopeEvent.fNChannels    = -1;
   
   char* lineptr = (char*) malloc(buflen);

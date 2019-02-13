@@ -23,6 +23,12 @@ public:
 // play a trick: make sure HistBase_t is an internal class !
 //-----------------------------------------------------------------------------
 #include "Stntuple/base/HistBase_t.h"
+
+//-----------------------------------------------------------------------------
+// number of channels being read out in a given run
+//-----------------------------------------------------------------------------
+  enum { kNChannels = 1 };
+    
 //-----------------------------------------------------------------------------
 //  histograms
 //-----------------------------------------------------------------------------
@@ -33,6 +39,15 @@ public:
 
   struct ChannelHist_t : public HistBase_t {
     TH1F*    fNSamples;			// 
+					// so far, assume one channel
+    TH2F*   fWaveform     ;
+    TH1F*   fLastWaveform ;
+    TH1F*   fQ;				// charge
+    TH1F*   fQ1;			// charge, corrected
+    TH1F*   fT0;			// T0
+    TH1F*   fPedestal;
+    TH1F*   fChi2Ped;
+    TH1F*   fPedP2P;
   };
 
   enum { kNEventHistSets   =  100 };
@@ -53,8 +68,9 @@ public:
 
   int                fFillHistograms;
   int                fEventNumber;
+  int                fNSamples;
 
-  TReadoutChannel    fChannel;
+  TReadoutChannel*   fChannel[kNChannels];
 //-----------------------------------------------------------------------------
 //  functions
 //-----------------------------------------------------------------------------
@@ -84,11 +100,13 @@ public:
   void    BookChannelHistograms (HistBase_t*   Hist, const char* Folder);
 
   void    FillEventHistograms    (HistBase_t*  Hist);
-
   void    FillChannelHistograms  (HistBase_t*  Hist, TReadoutChannel* Channel);
 
   void    BookHistograms();
   void    FillHistograms();
+
+  int     ProcessChannels();
+  int     ReconstructChannel(TReadoutChannel* Channel);
 
   void    Debug();
 

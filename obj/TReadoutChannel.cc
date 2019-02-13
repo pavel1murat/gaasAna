@@ -1,25 +1,62 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include "TH1.h"
 #include "gaasAna/obj/TReadoutChannel.hh"
 
 ClassImp(TReadoutChannel)
 
 //-----------------------------------------------------------------------------
 TReadoutChannel::TReadoutChannel() {
-  fNSamples = -1;
+  fID          = -1;
+  fNSamples    = -1;
+  fUsed        =  1;
+  fQ           = -999.;
+  fQ1          = -999.;
+  fPedestal    = -999.;
+  fV1Min       = -999.;
+  fI1Min       = -1;
+  fT0          = -999.;
+
+  fHist.fV0    = nullptr;
+  fHist.fV1    = nullptr;
+  fHist.fShape = nullptr;
 }
 
 //-----------------------------------------------------------------------------
-TReadoutChannel::TReadoutChannel(int NSamples) {
-  fNSamples = NSamples;
-  fT.reserve(NSamples);
-  fV0.reserve(NSamples);
-  fV1.reserve(NSamples);
+// assuming the channel ID is an integer number
+//-----------------------------------------------------------------------------
+TReadoutChannel::TReadoutChannel(int ID, int NSamples) {
+  fID          = ID;
+  fUsed        = 1 ;
+  SetNSamples(NSamples);
+
+  fQ           = -999.;
+  fQ1          = -999.;
+  fPedestal    = -999.;
+  fV1Min       = -999.;
+  fI1Min       = -1;
+  fT0          = -999.;
+
+  fHist.fV0    = new TH1F(Form("v0_%02i",fID),"V0"   ,fNSamples,0,fNSamples);
+  fHist.fV1    = new TH1F(Form("v1_%02i",fID),"V1"   ,fNSamples,0,fNSamples);
+  fHist.fShape = new TH1F(Form("sh_%02i",fID),"Shape",fNSamples,0,fNSamples);
 }
 
 //-----------------------------------------------------------------------------
 TReadoutChannel::~TReadoutChannel() {
+  delete fHist.fV0;
+  delete fHist.fV1;
+  delete fHist.fShape;
+}
+
+//-----------------------------------------------------------------------------
+void TReadoutChannel::SetNSamples(int N) {
+  fNSamples = N;
+  
+  fT .reserve(N);
+  fV0.reserve(N);
+  fV1.reserve(N);
 }
 
 //-----------------------------------------------------------------------------

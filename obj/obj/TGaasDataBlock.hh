@@ -46,6 +46,9 @@ public:
   float     GetTriggerTime  () { return fTriggerTime;   }
   TVectorT<float>* GetT     () { return &fT;            }
   TMatrixT<float>* GetV     () { return &fV;            }
+
+  float     T(int I) { return fT[I] ; }
+  float     V(int Channel, int I) { return fV[Channel][I] ; }
 //-----------------------------------------------------------------------------
 // modifiers
 //-----------------------------------------------------------------------------
