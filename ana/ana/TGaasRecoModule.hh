@@ -70,6 +70,8 @@ public:
   int                fEventNumber;
   int                fNSamples;
 
+  int                fPedError;
+
   TReadoutChannel*   fChannel[kNChannels];
 //-----------------------------------------------------------------------------
 //  functions

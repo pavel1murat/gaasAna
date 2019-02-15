@@ -198,7 +198,8 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
 
     int x = i+0.5;
     Hist->fWaveform    ->Fill(x,v*1.e3);
-    Hist->fLastWaveform->Fill(x,v*1.e3);
+    Hist->fLastWaveform->SetBinContent(i+1,v*1.e3);
+    Hist->fLastWaveform->SetBinError  (i+1,0);
   }
 }
 
@@ -225,7 +226,7 @@ void TGaasRecoModule::FillHistograms() {
     float p2p1 = fChannel[i]->fPar[1]-fChannel[i]->fPar[0];
     float p2p2 = fChannel[i]->fPar[3]-fChannel[i]->fPar[2];
     
-    if ((p2p1 < 0.0025) && (p2p2 < 0.0025)) FillChannelHistograms(fHist.fChannel[100+i], fChannel[i]);
+    if ((p2p1 < 0.0040) && (p2p2 < 0.0040)) FillChannelHistograms(fHist.fChannel[100+i], fChannel[i]);
     else                                    FillChannelHistograms(fHist.fChannel[200+i], fChannel[i]);
   }
 }
@@ -249,7 +250,8 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 //-----------------------------------------------------------------------------
 // at this point can proceed with the waveform analysis and pedestal determination
 //-----------------------------------------------------------------------------
-  static int  _nReports(0);
+  static int  _nErrors            (0);
+  static int  _printErrorThreshold(0);
   
   double    sum, qn, q, q1, v, vmin, vmax, pedestal, slope, _Gain, t0, y, ey, mean, chi2;
   double    _PedSigma ; // , ped_mean;
@@ -268,7 +270,9 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 //-----------------------------------------------------------------------------
   // ich                      = Data->GetChannelID()->GetNumber();
   _Gain                     = 1.; // fCalibData->GetChannelGain(ich);
-  _PulseIntegrationWindow   = 30; // (int) (fCalibData->GetPulseWindow(ich)*5);
+  //  _PulseIntegrationWindow   = 40; // (int) (fCalibData->GetPulseWindow(ich)*5);
+
+  int rn = GetHeaderBlock()->RunNumber();
   // ped_mean                 = fCalibData->GetPedestal(ich);
   _PedSigma                   = 0.01; // fCalibData->GetPedSigma(ich);
 
@@ -326,16 +330,16 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 
   Channel->SetMin1(cmin,vmin);
 //-----------------------------------------------------------------------------
-// look, approximately, for the first maximum
+// try to determine the waveform T0
 //-----------------------------------------------------------------------------
-  found    = 0;
+  found    =  0;
   min_cell = -1;
   max_cell = -1;
 
-  float  _minThreshold (-3.0e-3) ; // in mV
+  float  _minThreshold (-1.0e-3) ; // in mV
   
-  for (int i=0; i<fNSamples; i++) {
-    if (Channel->V1(i) < _minThreshold) {
+  for (int i=cmin; i>=0; i--) {
+    if (Channel->V1(i) >= _minThreshold) {
       min_cell = i; 
       found    = 1;
       break;
@@ -343,28 +347,29 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
   }
     
   if (found == 0) {
-    if (_nReports <= 20) {
-      Error("SubtractPedestals",Form("Couldnt find MIN_CELL for channel %i",
-				     Channel->ID()));
-      _nReports++;
+    fPedError    = 1;
+    _nErrors    += 1;
+    if (_nErrors >= _printErrorThreshold) {
+      GetHeaderBlock()->Print(Form("SubtractPedestals ERROR: %8i Couldnt find MIN_CELL for channel %i",
+				     _nErrors, Channel->ID()));
+      _printErrorThreshold = _printErrorThreshold*2;
     }
   }
-
 //-----------------------------------------------------------------------------
 // approximate T0, then find the first maximum ... which is not used so far...
 //-----------------------------------------------------------------------------
-  slope = (Channel->V1(min_cell+2)-Channel->V1(min_cell-2))/4.;
+  slope = (Channel->V1(cmin)-Channel->V1(min_cell))/(cmin-min_cell);
   t0    = min_cell-Channel->V1(min_cell)/slope;
 
   Channel->SetT0(t0);
                                                   
-  for (int i=min_cell; i<fNSamples-1; i++) {
-    max_cell = i;
-    if (Channel->V1(i+1) < Channel->V1(i)) { 
-      Channel->SetMin1(i,Channel->V1(i));
-      break;
-    }
-  }
+  // for (int i=min_cell; i<fNSamples-1; i++) {
+  //   max_cell = i;
+  //   if (Channel->V1(i+1) < Channel->V1(i)) { 
+  //     Channel->SetMin1(i,Channel->V1(i));
+  //     break;
+  //   }
+  // }
 //-----------------------------------------------------------------------------
 // recalculate pedestal using [T0-60,T0-10] samples interval
 //-----------------------------------------------------------------------------
@@ -419,9 +424,22 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
   }
 //-----------------------------------------------------------------------------
 // integrate charge (for non-trigger pulses)
+// poor-man's calib DB
 //-----------------------------------------------------------------------------
 //  min_cell = (int) (t0-10);
-  min_cell = (int) (t0-5);
+  if      (rn <=  6) {
+    min_cell                  = 235; // (int) (t0-5);
+    _PulseIntegrationWindow   = 40 ; // (int) (fCalibData->GetPulseWindow(ich)*5);
+  }
+  else if (rn <= 12) {
+    min_cell                  = 230;
+    _PulseIntegrationWindow   = 70 ;
+  }
+  else if (rn <= 14) {
+    min_cell                  = 235;
+    _PulseIntegrationWindow   = 40 ;
+  }
+
   if (min_cell < 0) min_cell = 0;
   max_cell = (int) (t0+_PulseIntegrationWindow);
   if (max_cell > 1024) max_cell=1024;
@@ -464,6 +482,7 @@ int TGaasRecoModule::Event(int ientry) {
   fEventNumber = GetHeaderBlock()->EventNumber();
 
   fGaasDataBlock->GetEntry(ientry);
+  fPedError = 0;
 
   ProcessChannels();
 
@@ -483,22 +502,26 @@ void TGaasRecoModule::Debug() {
 //-----------------------------------------------------------------------------
 // bit 0: All Events
 //-----------------------------------------------------------------------------
-  // if (GetDebugBit(0) == 1) {
-  //   GetHeaderBlock()->Print(Form("TGaasRecoModule :bit000:"));
-  //   printf("KPAR:\n");
-  //   fTrackBlock[kPAR]->Print();
+  if (GetDebugBit(2) == 1) {
+    for (int i=0; i<kNChannels; i++) { 
+      float p2p1 = fChannel[i]->fPar[1]-fChannel[i]->fPar[0];
+      float p2p2 = fChannel[i]->fPar[3]-fChannel[i]->fPar[2];
+    
+      if ((p2p1 > 0.0040) || (p2p2 > 0.0040)) {
+	GetHeaderBlock()->Print(Form("TGaasRecoModule:bit002: channel: %4i background: p2p > 0.0040",i));
+      }
+    }
+  }
 
-  //   for (int i=0; i<fNTracks[kPAR]; i++) { 
-  //     PrintTrack(fTrackBlock[kPAR]->Track(i),&fTrackPar[kPAR][i],"data");
-  //   }
-
-  //   printf("KDAR:\n");
-  //   fTrackBlock[kDAR]->Print();
-
-  //   for (int i=0; i<fNTracks[kDAR]; i++) { 
-  //     PrintTrack(fTrackBlock[kDAR]->Track(i),&fTrackPar[kDAR][i],"data");
-  //   }
-  // }
+  if (GetDebugBit(3) == 1) {
+    for (int i=0; i<kNChannels; i++) { 
+      if (fChannel[i]->fQ > -0.020) {
+	GetHeaderBlock()->Print(Form("TGaasRecoModule:bit003: channel: %4i q = %10.5f",
+				     i,fChannel[i]->fQ));
+      }
+    }
+  }
+  
 }
 
 //-----------------------------------------------------------------------------
