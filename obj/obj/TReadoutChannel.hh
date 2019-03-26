@@ -25,6 +25,7 @@ public:
   float          fQ1;			//
   float          fPedestal;             //
   float          fChi2Ped;              //
+  int            fNptPed;
 
   float          fV1Min;                // minimal V1 value for the whole waveform
   int            fI1Min;                // sample corresponding to minimal V1
@@ -58,10 +59,13 @@ public:
   float&          T (int I) { return fT [I]; }
   float&          V0(int I) { return fV0[I]; }
   float&          V1(int I) { return fV1[I]; }
+  float           V1Min   () { return fV1Min; }
+  int             I1Min   () { return fI1Min; }
   float           Q       () { return fQ;     }
   float           Q1      () { return fQ1;    }
   float           T0      () { return fT0;    }
   float           Chi2Ped () { return fChi2Ped;  }
+  int             NptPed  () { return fNptPed;   }
   float           Pedestal() { return fPedestal; }
 //-----------------------------------------------------------------------------
 // setters
@@ -70,6 +74,7 @@ public:
   void SetQ1       (float Q)    { fQ1       = Q;    }
   void SetPedestal (float P)    { fPedestal = P;    }
   void SetChi2Ped  (float Chi2) { fChi2Ped  = Chi2; }
+  void SetNptPed   (int   Npt ) { fNptPed   = Npt;  }
   void SetV1(int I, float V)    { fV1[I]    = V;    }
   void SetT0       (float T)    { fT0       = T;    }
 

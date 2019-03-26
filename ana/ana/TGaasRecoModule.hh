@@ -44,9 +44,10 @@ public:
     TH1F*   fLastWaveform ;
     TH1F*   fQ;				// charge
     TH1F*   fQ1;			// charge, corrected
+    TH1F*   fV1Min;			// amplitude
     TH1F*   fT0;			// T0
     TH1F*   fPedestal;
-    TH1F*   fChi2Ped;
+    TH1F*   fSigmaPed;
     TH1F*   fPedP2P;
   };
 

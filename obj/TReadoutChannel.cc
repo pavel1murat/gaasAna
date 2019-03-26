@@ -14,6 +14,8 @@ TReadoutChannel::TReadoutChannel() {
   fQ           = -999.;
   fQ1          = -999.;
   fPedestal    = -999.;
+  fNptPed      = -1;
+  fChi2Ped     = -999.;
   fV1Min       = -999.;
   fI1Min       = -1;
   fT0          = -999.;
@@ -34,6 +36,8 @@ TReadoutChannel::TReadoutChannel(int ID, int NSamples) {
   fQ           = -999.;
   fQ1          = -999.;
   fPedestal    = -999.;
+  fNptPed      = -1;
+  fChi2Ped     = -999.;
   fV1Min       = -999.;
   fI1Min       = -1;
   fT0          = -999.;
@@ -66,9 +70,12 @@ void TReadoutChannel::Clear(Option_t* Opt) {
 //-----------------------------------------------------------------------------
 void TReadoutChannel::Print(Option_t* Opt) const {
   printf("-------------------------------------------------------------------------------------------------------------\n");
-  printf(" ChID   NS Used     fQ      fQ1      fPed      fV1Min  fI1Min   fT0     fVMinP1   fVMaxP1   fVMinP2   fVMaxP2\n");
+  printf(" ChID   NS Used     fQ      fQ1      Np1 fPed      sigP      fV1Min  fI1Min   fT0     fVMinP1   fVMaxP1   fVMinP2   fVMaxP2\n");
   printf("-------------------------------------------------------------------------------------------------------------\n");
 
-  printf(" %4i %4i    %1i %8.3f %8.3f %9.6f %9.5f  %5i  %7.3f %9.5f %9.5f %9.5f %9.5f\n",
-	 fID, fNSamples,fUsed,fQ*1.e3,fQ1*1.e3,fPedestal*1e3,fV1Min*1.e3,fI1Min,fT0,fPar[0]*1e3,fPar[1]*1.e3,fPar[2]*1.e3,fPar[3]*1.e3);
+  float sig = sqrt(fChi2Ped*(fNptPed-1)/fNptPed);
+  
+  printf(" %4i %4i    %1i %8.3f %8.3f %4i %9.6f %9.5f %9.5f  %5i  %7.3f %9.5f %9.5f %9.5f %9.5f\n",
+	 fID, fNSamples,fUsed,fQ*1.e3,fQ1*1.e3,
+    fNptPed,fPedestal*1e3,sig*1.e3,fV1Min*1.e3,fI1Min,fT0,fPar[0]*1e3,fPar[1]*1.e3,fPar[2]*1.e3,fPar[3]*1.e3);
 }

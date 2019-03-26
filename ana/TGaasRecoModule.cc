@@ -94,9 +94,10 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
   HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" ,fNSamples,0,fNSamples,Folder);
   HBook1F(Hist->fQ           ,"q"       ,"Q"       ,400      ,-0.2,0.2,Folder);
   HBook1F(Hist->fQ1          ,"q1"      ,"Q1"      ,400      ,-0.2,0.2,Folder);
+  HBook1F(Hist->fV1Min       ,"v1min"   ,"V1Min"   ,200      ,-15, 5,Folder);
   HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,200      ,230,250,Folder);
   HBook1F(Hist->fPedestal    ,"ped"     ,"Pedestal",200      ,-1.e-3,1.e-3,Folder);
-  HBook1F(Hist->fChi2Ped     ,"chi2ped" ,"Chi2Ped" ,500      , 0, 1.e-5,Folder);
+  HBook1F(Hist->fSigmaPed    ,"sigped"  ,"SigmPed" ,500      , 0, 2.5e-3,Folder);
   HBook1F(Hist->fPedP2P      ,"pedp2p"  ,"Ped P2P" ,100      , 0, 10.e-3,Folder);
 }
 
@@ -141,8 +142,10 @@ void TGaasRecoModule::BookHistograms() {
   for (int i=0; i<kNChannelHistSets; i++) { channel_selection[i] = NULL; }
 
   channel_selection[  0] = new TString("all channels");
-  channel_selection[100] = new TString("P2P < 0.0025");
-  channel_selection[200] = new TString("P2P >= 0.0025");
+  channel_selection[100] = new TString("P2P < 0.0040");
+  channel_selection[200] = new TString("P2P >= 0.0040");
+  channel_selection[300] = new TString("P2P < 0.0040 and 3 < V1Min < 8"); // "QD signal" for run 14
+  channel_selection[400] = new TString("P2P < 0.0040 and V1Min > 8"    ); // "PD signal" for run 14
 
   const char* folder_title;
   for (int i=0; i<kNChannelHistSets; i++) {
@@ -182,7 +185,11 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
   Hist->fQ->Fill(Channel->Q());
   Hist->fQ1->Fill(Channel->Q1());
   Hist->fT0->Fill(Channel->T0());
-  Hist->fChi2Ped->Fill(Channel->Chi2Ped());
+  Hist->fV1Min->Fill(Channel->V1Min()*1.e3);
+					// N(points) >> 1, do not correct for that
+  
+  float sig_ped = sqrt(Channel->Chi2Ped());
+  Hist->fSigmaPed->Fill(sig_ped);
   Hist->fPedestal->Fill(Channel->Pedestal());
 
   // pedestal "voltage span"
@@ -228,6 +235,13 @@ void TGaasRecoModule::FillHistograms() {
     
     if ((p2p1 < 0.0040) && (p2p2 < 0.0040)) FillChannelHistograms(fHist.fChannel[100+i], fChannel[i]);
     else                                    FillChannelHistograms(fHist.fChannel[200+i], fChannel[i]);
+
+    float v1min = fChannel[i]->V1Min();
+    
+    if ((p2p1 < 0.0040) && (p2p2 < 0.0040)) {
+      if      ((v1min < -3.e-3) && (v1min > -8.e-3)) FillChannelHistograms(fHist.fChannel[300+i], fChannel[i]);
+      else if (v1min < -8e-3)                        FillChannelHistograms(fHist.fChannel[400+i], fChannel[i]);
+    }
   }
 }
 
@@ -383,6 +397,8 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
   TGaasUtils::FitPol0(&Channel->V0(0),min_cell,max_cell,&mean,&chi2);
   Channel->SetPedestal(mean);
   Channel->SetChi2Ped (chi2);
+  int npt = max_cell-min_cell+1;
+  Channel->SetNptPed  (npt);
 //-----------------------------------------------------------------------------
 // redefine V1, using real pedestal - fitted for a given event or the mean
 // 2012-12-27: use fitted value
