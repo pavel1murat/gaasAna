@@ -26,7 +26,10 @@ struct TScopeEvent {
   float    fTriggerTime;
   
   float    fT[5000];			// this is a shortcut...
-  float    fV[10][5000];		// 
+  float    fV[10][5000];		//
+
+  float    fVOff[10];
+  float    fVSlp[10];
   
 };
 

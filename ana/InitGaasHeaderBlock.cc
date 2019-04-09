@@ -19,7 +19,7 @@ int InitGaasHeaderBlock::InitDataBlock(TStnDataBlock* Block, AbsEvent* Event, in
   block->fVersion       = fScopeEvent->fVersion;
   block->fEventNumber   = fScopeEvent->fEventNumber;
   block->fRunNumber     = fScopeEvent->fRunNumber;
-  block->fSubrunNumber  = fScopeEvent->fSubrunNumber;
+  block->fSectionNumber = fScopeEvent->fSubrunNumber;
   block->fMcFlag        = fScopeEvent->fMcFlag;
   block->fGoodRun       = fScopeEvent->fGoodRun;
   block->fBrCode        = fScopeEvent->fBrCode;

@@ -27,6 +27,8 @@ public:
   float          fChi2Ped;              //
   int            fNptPed;
 
+  float          fV1Max;                // maximal V1 value for the whole waveform
+  float          fI1Max;                // sample corresponding to maximal V1
   float          fV1Min;                // minimal V1 value for the whole waveform
   int            fI1Min;                // sample corresponding to minimal V1
   float          fT0;			//
@@ -61,6 +63,8 @@ public:
   float&          V1(int I) { return fV1[I]; }
   float           V1Min   () { return fV1Min; }
   int             I1Min   () { return fI1Min; }
+  float           V1Max   () { return fV1Max; }
+  int             I1Max   () { return fI1Max; }
   float           Q       () { return fQ;     }
   float           Q1      () { return fQ1;    }
   float           T0      () { return fT0;    }
@@ -80,8 +84,11 @@ public:
 
   void SetV1Min    (float V) { fV1Min    = V; }
   void SetI1Min    (int   I) { fI1Min    = I; }
+  void SetV1Max    (float V) { fV1Max    = V; }
+  void SetI1Max    (int   I) { fI1Max    = I; }
 
   void SetMin1     (int I, float V) {fI1Min = I; fV1Min = V; }
+  void SetMax1     (int I, float V) {fI1Max = I; fV1Max = V; }
   
   void SetNSamples(int NSamples);
   

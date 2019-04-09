@@ -38,17 +38,19 @@ public:
   };
 
   struct ChannelHist_t : public HistBase_t {
-    TH1F*    fNSamples;			// 
+    TH1F*   fNSamples;			// 
 					// so far, assume one channel
-    TH2F*   fWaveform     ;
+    TH2F*   fWaveform[2]  ;
     TH1F*   fLastWaveform ;
-    TH1F*   fQ;				// charge
-    TH1F*   fQ1;			// charge, corrected
+    TH1F*   fQ[2];			// charge
+    TH1F*   fQ1[2];			// charge, corrected
     TH1F*   fV1Min;			// amplitude
+    TH1F*   fV1Max;			// amplitude
     TH1F*   fT0;			// T0
-    TH1F*   fPedestal;
-    TH1F*   fSigmaPed;
-    TH1F*   fPedP2P;
+    TH1F*   fPedestal[2];
+    TH1F*   fSigmaPed[2];
+    TH1F*   fP2P1    [2];
+    TH1F*   fP2P2    [2];
   };
 
   enum { kNEventHistSets   =  100 };
@@ -72,6 +74,17 @@ public:
   int                fNSamples;
 
   int                fPedError;
+
+  int                fMinSample[2];
+  int                fMaxSample[2];
+  float              fMaxP2P;
+  float              fMaxThreshold;
+					// pulse integration
+  int                fFirstCell;
+  int                fPulseIntegrationWindow;
+  float              fGain;
+
+  int                fPolarity;   // signal polarity - set by hand
 
   TReadoutChannel*   fChannel[kNChannels];
 //-----------------------------------------------------------------------------
