@@ -6,6 +6,8 @@
 
 
 struct TScopeEvent {
+
+  enum { kMaxNChannels = 4 } ;
 					// header
   int      fVersion;			// 0:Tektronix  1:Agilent  (may be)
   int      fEventNumber;
@@ -22,14 +24,15 @@ struct TScopeEvent {
   int      fNChannels;
   int      fNSamples;
   int      fTriggerSample;
+  int      fChannelUsed[kMaxNChannels];
   float    fSampleTime;
   float    fTriggerTime;
   
   float    fT[5000];			// this is a shortcut...
-  float    fV[10][5000];		//
+  float    fV[kMaxNChannels][5000];		//
 
-  float    fVOff[10];
-  float    fVSlp[10];
+  float    fVOff[kMaxNChannels];
+  float    fVSlp[kMaxNChannels];
   
 };
 

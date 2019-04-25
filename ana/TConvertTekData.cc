@@ -220,6 +220,8 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   fScopeEvent.fStnVersion   = "v7_3_5";
 					// assume number of channels doesn't change within the run
   fScopeEvent.fNChannels    = -1;
+
+  for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelUsed[i] = 0;
   
   char* lineptr = (char*) malloc(buflen);
 
@@ -268,41 +270,39 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
       TObjString* os = (TObjString*) words.At(nw-3);
       fScopeEvent.fNSamples  = strtol(os->String().Data(),nullptr,10);
       
-      continue;   // assume 2 channels
+      continue;   // number of channels is defined at run-time
     }
     
-    if (s.Index("(\'WFMOutpre:CH1:") == 0) {
+    //    if (s.Index("WFMOutpre:CH1:") == 0) {
+    if (s.Index("WFMOutpre:") == 0) {
 
       Parse(&s,';',&words);
-      //      int nw = words.GetEntries();
+      int nw = words.GetEntries();
 
-      TObjString* os = (TObjString*) words.At(9);
-      fScopeEvent.fSampleTime  = strtof(os->String().Data(),nullptr);
-
-      os = (TObjString*) words.At(14);
-      fScopeEvent.fVOff[0] = strtof(os->String().Data(),nullptr);
-
-      os = (TObjString*) words.At(13);
-      fScopeEvent.fVSlp[0] = strtof(os->String().Data(),nullptr);
-      
-      continue;
-    }
-
-    if (s.Index("(\'WFMOutpre:CH2:") == 0) {
+      if (nw > 5) {
 //-----------------------------------------------------------------------------
-// in general, voltage scales for the two channels are different
+// figure out which channel - split by ':'
+// chname = "CH1", "CH2" etc
 //-----------------------------------------------------------------------------
-      Parse(&s,';',&words);
-      //      int nw = words.GetEntries();
+	TObjArray w0;
+	TString s0 = ((TObjString*) words.At(0))->String();
+	Parse(&s0,':',&w0);
 
-      TObjString* os;
+	TString chname = ((TObjString*) w0.At(1))->String();
 
-      os = (TObjString*) words.At(14);
-      fScopeEvent.fVOff[1]  = strtof(os->String().Data(),nullptr);
+	int ich = chname[2]-'1';
 
-      os = (TObjString*) words.At(13);
-      fScopeEvent.fVSlp[1]  = strtof(os->String().Data(),nullptr);
-      
+	fScopeEvent.fChannelUsed[ich] = 1;
+	
+	TObjString* os = (TObjString*) words.At(9);
+	fScopeEvent.fSampleTime  = strtof(os->String().Data(),nullptr);
+
+	os = (TObjString*) words.At(14);
+	fScopeEvent.fVOff[ich] = strtof(os->String().Data(),nullptr);
+
+	os = (TObjString*) words.At(13);
+	fScopeEvent.fVSlp[ich] = strtof(os->String().Data(),nullptr);
+      }
       continue;
     }
 
