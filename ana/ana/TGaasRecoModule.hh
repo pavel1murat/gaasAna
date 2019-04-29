@@ -16,6 +16,7 @@
 
 #include "gaasAna/obj/TGaasDataBlock.hh"
 #include "gaasAna/obj/TReadoutChannel.hh"
+#include "gaasAna/obj/TGaasCalibData.hh"
 
 class TGaasRecoModule: public TStnModule {
 public:
@@ -27,7 +28,7 @@ public:
 //-----------------------------------------------------------------------------
 // number of channels being read out in a given run
 //-----------------------------------------------------------------------------
-  enum { kNChannels = 1 };
+  enum { kMaxNChannels = 100 };
     
 //-----------------------------------------------------------------------------
 //  histograms
@@ -44,8 +45,8 @@ public:
     TH1F*   fLastWaveform ;
     TH1F*   fQ[2];			// charge
     TH1F*   fQ1[2];			// charge, corrected
-    TH1F*   fV1Min;			// amplitude
-    TH1F*   fV1Max;			// amplitude
+    TH1F*   fV0Max;			// max ampl, raw
+    TH1F*   fV1Max;			// max ampl, baseline subtracted
     TH1F*   fT0;			// T0
     TH1F*   fPedestal[2];
     TH1F*   fSigmaPed[2];
@@ -67,26 +68,29 @@ public:
 					// pointers to the data blocks used
   TGaasDataBlock*    fGaasDataBlock;	//
 
+  TGaasCalibData*    fCalibData;
+
   Hist_t             fHist;
 
+  int                fFirstRun;
   int                fFillHistograms;
   int                fEventNumber;
-  int                fNSamples;
+  //  int                fNSamples;
 
   int                fPedError;
 
-  int                fMinSample[2];
-  int                fMaxSample[2];
-  float              fMaxP2P;
-  float              fMaxThreshold;
+  // int                fMinSample[2];
+  // int                fMaxSample[2];
+  // float              fMaxP2P;
+  // float              fMaxThreshold;
 					// pulse integration
-  int                fFirstCell;
-  int                fPulseIntegrationWindow;
-  float              fGain;
+  // int                fFirstCell;
+  // int                fPulseIntegrationWindow;
+  // float              fGain;
 
   int                fPolarity;   // signal polarity - set by hand
 
-  TReadoutChannel*   fChannel[kNChannels];
+  TReadoutChannel*   fChannel[kMaxNChannels];
 //-----------------------------------------------------------------------------
 //  functions
 //-----------------------------------------------------------------------------
@@ -122,7 +126,7 @@ public:
   void    FillHistograms();
 
   int     ProcessChannels();
-  int     ReconstructChannel(TReadoutChannel* Channel);
+  int     ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChannel* Calib);
 
   void    Debug();
 

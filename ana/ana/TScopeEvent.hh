@@ -31,9 +31,9 @@ struct TScopeEvent {
   float    fT[5000];			// this is a shortcut...
   float    fV[kMaxNChannels][5000];		//
 
-  float    fVOff[kMaxNChannels];
-  float    fVSlp[kMaxNChannels];
-  
+  float    fVSlp [kMaxNChannels];
+  float    fVOff [kMaxNChannels];
+  float    fVOff2[kMaxNChannels];
 };
 
 

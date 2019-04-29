@@ -27,10 +27,10 @@ public:
   float          fChi2Ped;              //
   int            fNptPed;
 
+  float          fV0Max;                // maximal V0 value for the whole waveform
+  int            fI0Max;                // sample corresponding to maximal V0
   float          fV1Max;                // maximal V1 value for the whole waveform
-  float          fI1Max;                // sample corresponding to maximal V1
-  float          fV1Min;                // minimal V1 value for the whole waveform
-  int            fI1Min;                // sample corresponding to minimal V1
+  int            fI1Max;                // sample corresponding to maximal V1
   float          fT0;			//
 
   struct Hist_t {
@@ -61,8 +61,8 @@ public:
   float&          T (int I) { return fT [I]; }
   float&          V0(int I) { return fV0[I]; }
   float&          V1(int I) { return fV1[I]; }
-  float           V1Min   () { return fV1Min; }
-  int             I1Min   () { return fI1Min; }
+  float           V0Max   () { return fV0Max; }
+  int             I0Max   () { return fI0Max; }
   float           V1Max   () { return fV1Max; }
   int             I1Max   () { return fI1Max; }
   float           Q       () { return fQ;     }
@@ -82,14 +82,11 @@ public:
   void SetV1(int I, float V)    { fV1[I]    = V;    }
   void SetT0       (float T)    { fT0       = T;    }
 
-  void SetV1Min    (float V) { fV1Min    = V; }
-  void SetI1Min    (int   I) { fI1Min    = I; }
+  void SetV0Max    (float V) { fV0Max    = V; }
+  void SetI0Max    (int   I) { fI0Max    = I; }
   void SetV1Max    (float V) { fV1Max    = V; }
   void SetI1Max    (int   I) { fI1Max    = I; }
 
-  void SetMin1     (int I, float V) {fI1Min = I; fV1Min = V; }
-  void SetMax1     (int I, float V) {fI1Max = I; fV1Max = V; }
-  
   void SetNSamples(int NSamples);
   
 //-----------------------------------------------------------------------------

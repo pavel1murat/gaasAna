@@ -297,11 +297,14 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 	TObjString* os = (TObjString*) words.At(9);
 	fScopeEvent.fSampleTime  = strtof(os->String().Data(),nullptr);
 
+	os = (TObjString*) words.At(13);
+	fScopeEvent.fVSlp[ich] = strtof(os->String().Data(),nullptr);
+
 	os = (TObjString*) words.At(14);
 	fScopeEvent.fVOff[ich] = strtof(os->String().Data(),nullptr);
 
-	os = (TObjString*) words.At(13);
-	fScopeEvent.fVSlp[ich] = strtof(os->String().Data(),nullptr);
+	os = (TObjString*) words.At(15);
+	fScopeEvent.fVOff2[ich] = strtof(os->String().Data(),nullptr);
       }
       continue;
     }
@@ -328,17 +331,17 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 	  for (int i=0; i<nw; i++) {
 	    const char* num = ((TObjString*) numbers.At(i))->String().Data();
 	    int val = strtol(num,nullptr,10);
-	    fScopeEvent.fV[ich][loc] = (val-fScopeEvent.fVOff[ich])*fScopeEvent.fVSlp[ich];
+	    fScopeEvent.fV[ich][loc] = (val-fScopeEvent.fVOff[ich])*fScopeEvent.fVSlp[ich] + fScopeEvent.fVOff2[ich];
 	    loc++;
 	  }
 					// next line
-	  if (loc >= 500) break;
+	  if (loc >= fScopeEvent.fNSamples) break;
 	}
       }
 //-----------------------------------------------------------------------------
 // initialize times
 //-----------------------------------------------------------------------------
-      for (int i=0; i<500; i++) {
+      for (int i=0; i<fScopeEvent.fNSamples; i++) {
 	fScopeEvent.fT[i] = fScopeEvent.fSampleTime*(i+0.5);
       }
 //-----------------------------------------------------------------------------

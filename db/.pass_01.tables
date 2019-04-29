@@ -1,0 +1,5 @@
+#-----------------------------------------------------------------------
+# defines subdetectors and tables included into this pass
+#-----------------------------------------------------------------------
+gaas  config
+gaas  readout_map

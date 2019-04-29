@@ -88,19 +88,20 @@ void  TGaasDataBlock::Print(Option_t* opt) const {
 
   if (nw > 0) printf("\n");
 //-----------------------------------------------------------------------------
-// print waveform - so far - just one, the first one
+// print waveforms - so far - just one, the first one
 //-----------------------------------------------------------------------------
-  printf("------ waveform: \n");
-  nw = 0;
-  for (int i=0; i<fNSamples; i++) {
-    printf(" %7.3f",fV(0,i)*1.e3);
-    nw++;
-    if (nw >= 20) {
-      printf("\n");
-      nw = 0;
+  for (int ich=0; ich<fNChannels; ich++) {
+    printf("------ waveform in CH%i: \n",ich);
+    nw = 0;
+    for (int i=0; i<fNSamples; i++) {
+      printf(" %7.3f",fV(ich,i)*1.e3);
+      nw++;
+      if (nw >= 20) {
+	printf("\n");
+	nw = 0;
+      }
     }
-  }
 
-  if (nw > 0) printf("\n");
-  
+    if (nw > 0) printf("\n");
+  }
 }

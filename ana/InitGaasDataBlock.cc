@@ -30,8 +30,10 @@ int InitGaasDataBlock::InitDataBlock(TStnDataBlock* Block, AbsEvent* Event, int 
   block->fV.ResizeTo(block->fNChannels,block->fNSamples);
 
   for (int i=0; i<block->fNChannels; i++) {
-    for (int j=0; j<block->fNSamples; j++) {
-      block->fV(i,j) = fScopeEvent->fV[i][j];
+    if (fScopeEvent->fChannelUsed[i]) {
+      for (int j=0; j<block->fNSamples; j++) {
+	block->fV(i,j) = fScopeEvent->fV[i][j];
+      }
     }
   }
 

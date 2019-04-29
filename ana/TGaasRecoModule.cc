@@ -20,6 +20,7 @@
 #include "Stntuple/loop/TStnAna.hh"
 #include "Stntuple/loop/TStnInputModule.hh"
 #include "Stntuple/base/TStnDataset.hh"
+#include "Stntuple/base/TCalibManager.hh"
 #include "Stntuple/obj/TStnHeaderBlock.hh"
 #include "Stntuple/obj/TStnNode.hh"
 #include "Stntuple/alg/TStntuple.hh"
@@ -38,11 +39,10 @@ ClassImp(TGaasRecoModule)
 TGaasRecoModule::TGaasRecoModule(const char* name, const char* title): TStnModule(name,title)
 {
   fFillHistograms = 1;
-  fNSamples       = 500;                        // should come from the database
-
-  for (int i=0; i<kNChannels; i++) {
-    fChannel[i] = new TReadoutChannel(i,fNSamples);
-  }
+  //  fNSamples       = 500;                        // should come from the database
+  fFirstRun       = -1;
+  TClass* cl      = gROOT->GetClass("TGaasCalibData");
+  fCalibData      = (TGaasCalibData*) cl->New();
 }
 
 //-----------------------------------------------------------------------------
@@ -59,247 +59,7 @@ int TGaasRecoModule::BeginJob() {
 //-----------------------------------------------------------------------------
 // book histograms
 //-----------------------------------------------------------------------------
-  BookHistograms();
-
-  return 0;
-}
-
-
-//-----------------------------------------------------------------------------
-// define run-dependent constant which ultimately will be retrieved
-// from the database
-//-----------------------------------------------------------------------------
-int TGaasRecoModule::BeginRun() {
-  int rn = GetHeaderBlock()->RunNumber();
-
-  fGain           = 1.; // fCalibData->GetChannelGain(ich);
-
-  if (rn < 15) {
-    fPolarity     =  -1;
-    fMinSample[0] =   0;
-    fMaxSample[0] = 200;
-    fMinSample[1] = 320;
-    fMaxSample[1] = 499;
-
-    fMaxP2P       = 0.004;
-    fMaxThreshold = 1.0e-3 ; // in mV
-
-    if      (rn <=  6) {
-      fFirstCell                = 235; // (int) (t0-5);
-      fPulseIntegrationWindow   = 40 ; // (int) (fCalibData->GetPulseWindow(ich)*5);
-    }
-    else if (rn <= 12) {
-      fFirstCell                = 230;
-      fPulseIntegrationWindow   = 70 ;
-    }
-    else if (rn <= 14) {
-      fFirstCell                = 235;
-      fPulseIntegrationWindow   = 40 ;
-    }
-  }
-  if ((rn >= 15) && (rn <= 29)) {
-//-----------------------------------------------------------------------------
-// calibration of alpha sources
-//-----------------------------------------------------------------------------
-    fPolarity     =  1;
-    
-    if (rn == 15) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 150;
-      fMinSample[1] = 320;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 180;
-      fPulseIntegrationWindow = 100;
-    }
-
-    if (rn == 16) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 150;
-      fMinSample[1] = 320;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 180;
-      fPulseIntegrationWindow = 100;
-    }
-
-    if (rn == 17) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 320;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-
-    if (rn <= 28) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 320;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else if (rn == 29) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-  }
-  else if (rn <= 40) {
-//-----------------------------------------------------------------------------
-// calibration of alpha sources
-//-----------------------------------------------------------------------------
-    fPolarity     =  1;
-    if (rn == 30) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else if (rn == 31) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else if (rn == 32) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else if (rn == 33) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else if (rn == 34) {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-    else {
-      fMinSample[0] =   0;
-      fMaxSample[0] = 140;
-      fMinSample[1] = 280;
-      fMaxSample[1] = 499;
-
-      fMaxP2P       = 4.;
-      fMaxThreshold = 100; // in mV
-
-      fFirstCell              = 150;
-      fPulseIntegrationWindow = 100;
-    }
-  }
-  else if (rn < 48) {
-//-----------------------------------------------------------------------------
-// continue with the source calibrations:
-// run 41: internal pulser + PO-210
-// run 42: PO-210 only
-//-----------------------------------------------------------------------------
-    fPolarity     =  1;
-    fMinSample[0] =   0;
-    fMaxSample[0] = 140;
-    fMinSample[1] = 280;
-    fMaxSample[1] = 499;
-
-    fMaxP2P       = 4.;
-    fMaxThreshold = 100; // in mV
-
-    fFirstCell              = 150;
-    fPulseIntegrationWindow = 100;
-  }
-  else if (rn < 50) {
-//-----------------------------------------------------------------------------
-// PHOTODIODE #5
-// run 48: trigger threshold -5   mV
-// run 49: trigger threshold -3.5 mV
-//-----------------------------------------------------------------------------
-    fPolarity     =  -1;
-    fMinSample[0] =   0;
-    fMaxSample[0] = 190;
-    fMinSample[1] = 310;
-    fMaxSample[1] = 499;
-
-    fMaxP2P       = 4.;
-    fMaxThreshold = 100; // in mV
-
-    fFirstCell              = 200;
-    fPulseIntegrationWindow = 100;
-  }
-  else if (rn < 60) {
-//-----------------------------------------------------------------------------
-// PHOTODIODE #6
-// run 50: trigger threshold -5 mV, the amplifier powered up by the 12V battery
-// run 51: trigger threshold -5 mV, the amplifier powered up by Keithley
-// run 52: D#6, 
-//-----------------------------------------------------------------------------
-    fPolarity     =  -1;
-    fMinSample[0] =   0;
-    fMaxSample[0] = 220;
-    fMinSample[1] = 310;
-    fMaxSample[1] = 499;
-
-    fMaxP2P       = 4.;
-    fMaxThreshold = 100; // in mV
-
-    fFirstCell              = 230;
-    fPulseIntegrationWindow =  50;
-  }
+//  BookHistograms();
 
   return 0;
 }
@@ -316,31 +76,35 @@ void TGaasRecoModule::BookEventHistograms(HistBase_t* HistR, const char* Folder)
 }
 
 //-----------------------------------------------------------------------------
+// assume taht all channels have the same time sampling
+//-----------------------------------------------------------------------------
 void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folder) {
 //   char name [200];
 //   char title[200];
 
   ChannelHist_t* Hist =  (ChannelHist_t*) HistR;
 
+  int ns = fCalibData->GetChannel(0)->GetNSamples();
+
   HBook1F(Hist->fNSamples    ,"nsamples","nsamples",100,  0  ,1000. ,Folder);
-  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]",fNSamples,0,fNSamples,1000, -50,  50,Folder);
-  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]",fNSamples,0,fNSamples,5000,-500,4500,Folder);
-  HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" ,fNSamples,0,fNSamples,Folder);
+  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]", ns,  0,    ns  ,1000, -50,  50,Folder);
+  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]", ns,  0,    ns  ,5000,-500,4500,Folder);
+  HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" , ns,  0,    ns, Folder);
   HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"     ,1250     ,  0, 0.25,Folder);
-  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1250     ,  0, 250,Folder);
+  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0, 500,Folder);
   HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"    ,1250     ,  0,0.25,Folder);
-  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1250     ,  0, 250,Folder);
-  HBook1F(Hist->fV1Min       ,"v1min"   ,"V1Min"   ,250      ,  0, 50,Folder);
+  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1000     ,  0, 500,Folder);
+  HBook1F(Hist->fV0Max       ,"v0max"   ,"V0Max"   ,250      ,  0, 50,Folder);
   HBook1F(Hist->fV1Max       ,"v1max"   ,"V1Max"   ,500      ,  0, 50,Folder);
   HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,150,350,Folder);
   HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,500      ,-1.e-3,1.e-3,Folder);
   HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,500      ,-25,  25,Folder);
   HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",500      , 0, 2.5e-3,Folder);
   HBook1F(Hist->fSigmaPed[1] ,"sigped_1","SPed, mV",200      , 0, 2.    ,Folder);
-  HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"  ,100      , 0, 10.e-3,Folder);
-  HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"  ,100      , 0, 1    ,Folder);
-  HBook1F(Hist->fP2P2[0]     ,"p2p2_0"  ,"P2P2_0"  ,100      , 0, 10.e-3,Folder);
-  HBook1F(Hist->fP2P2[1]     ,"p2p2_1"  ,"P2P2_1"  ,100      , 0, 1    ,Folder);
+  HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"  ,200      , 0, 10    ,Folder);
+  HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"  ,200      , 0, 100   ,Folder);
+  HBook1F(Hist->fP2P2[0]     ,"p2p2_0"  ,"P2P2_0"  ,200      , 0, 10    ,Folder);
+  HBook1F(Hist->fP2P2[1]     ,"p2p2_1"  ,"P2P2_1"  ,200      , 0, 100   ,Folder);
 }
 
 //_____________________________________________________________________________
@@ -383,11 +147,15 @@ void TGaasRecoModule::BookHistograms() {
 
   for (int i=0; i<kNChannelHistSets; i++) { channel_selection[i] = NULL; }
 
-  channel_selection[  0] = new TString("all channels");
-  channel_selection[100] = new TString("P2P < 0.0040");
-  channel_selection[200] = new TString("P2P >= 0.0040");
-  channel_selection[300] = new TString("P2P < 0.0040 and 3 < V1Min < 8"); // "QD signal" for run 14
-  channel_selection[400] = new TString("P2P < 0.0040 and V1Min > 8"    ); // "PD signal" for run 14
+  int nch = fCalibData->GetNChannels();
+
+  for (int i=0; i<nch; i++) {
+    channel_selection[    i] = new TString("all channels");
+    channel_selection[100+i] = new TString("P2P < 0.0040");
+    channel_selection[200+i] = new TString("P2P >= 0.0040");
+    channel_selection[300+i] = new TString("P2P < 0.0040 and 3 < V1Min < 8"); // "QD signal" for run 14
+    channel_selection[400+i] = new TString("P2P < 0.0040 and V1Min > 8"    ); // "PD signal" for run 14
+  }
 
   const char* folder_title;
   for (int i=0; i<kNChannelHistSets; i++) {
@@ -430,7 +198,7 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
   Hist->fQ1[1]->Fill(Channel->Q1());
   
   Hist->fT0->Fill(Channel->T0());
-  Hist->fV1Min->Fill(Channel->V1Min());
+  Hist->fV0Max->Fill(Channel->V0Max());
   Hist->fV1Max->Fill(Channel->V1Max());
 					// N(points) >> 1, do not correct for that
   
@@ -454,9 +222,8 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
   Hist->fLastWaveform->Reset();
   
   for (int i=0; i<ns; i++) {
-    float v = fGaasDataBlock->V(0,i)*1.e3;
-
-    int x = i+0.5;
+    float v = Channel->V0(i);
+    int   x = i+0.5;
     Hist->fWaveform[0]    ->Fill(x,v);
     Hist->fWaveform[1]    ->Fill(x,v);
     Hist->fLastWaveform->SetBinContent(i+1,v);
@@ -481,43 +248,294 @@ void TGaasRecoModule::FillHistograms() {
 
   // so far have just one channel, pretend there are many
 
-  for (int i=0; i<kNChannels; i++) {
-    FillChannelHistograms(fHist.fChannel[i], fChannel[i]);
-
-    float p2p_1 = fChannel[i]->fPar[1]-fChannel[i]->fPar[0];
-    float p2p_2 = fChannel[i]->fPar[3]-fChannel[i]->fPar[2];
+  int nch = fGaasDataBlock->GetNChannels();
+  
+  for (int i=0; i<nch; i++) {
+    TReadoutChannel*   ch  = fChannel[i];
+    TGaasCalibChannel* cch = fCalibData->GetChannel(i);
     
-    if ((p2p_1 < fMaxP2P) && (p2p_2 < fMaxP2P)) FillChannelHistograms(fHist.fChannel[100+i], fChannel[i]);
-    else                                        FillChannelHistograms(fHist.fChannel[200+i], fChannel[i]);
-
-    float v1min = fChannel[i]->V1Min();
+    FillChannelHistograms(fHist.fChannel[i], ch);
+      
+    float p2p_1 = ch->fPar[1]-ch->fPar[0];
+    float p2p_2 = ch->fPar[3]-ch->fPar[2];
     
-    if ((p2p_1 < fMaxP2P) && (p2p_2 < fMaxP2P)) {
-      if      ((v1min < -3.e-3) && (v1min > -8.e-3)) FillChannelHistograms(fHist.fChannel[300+i], fChannel[i]);
-      else if (v1min < -8e-3)                        FillChannelHistograms(fHist.fChannel[400+i], fChannel[i]);
+    if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
+      FillChannelHistograms(fHist.fChannel[100+i], ch);
+    }
+    else {
+      FillChannelHistograms(fHist.fChannel[200+i], ch);
+    }
+
+    float v1max = ch->V1Max();
+    
+    if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
+      if      ((v1max >  3.) && (v1max < 8.)) FillChannelHistograms(fHist.fChannel[300+i], ch);
+      else if ( v1max >  8.)                  FillChannelHistograms(fHist.fChannel[400+i], ch);
     }
   }
 }
 
-
 //-----------------------------------------------------------------------------
-int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
+int TGaasRecoModule::BeginRun() {
+  //  char calib_name[200];
 
-  int ns = fGaasDataBlock->GetNSamples();
+  int rn = GetHeaderBlock()->RunNumber();
 
-  vector<float>* t  = Channel->GetT();
-  vector<float>* v0 = Channel->GetV0();
-  //  vector<float>* v1 = Channel->GetV1();
-  
-  Channel->SetNSamples(ns);
+  TCalibManager* cm = TCalibManager::Instance();
 
+  fCalibData->Init(rn,cm);
+
+// //-----------------------------------------------------------------------------
+// // this is, obviously, a hack
+// //-----------------------------------------------------------------------------
+//   sprintf(calib_name,"config");
+// 
+//   crr = cm->GetRunRange("gaas","config",rn);
+//   if (crr == 0) {
+//     Error("BeginRun",Form("missing Gaas Reco CONFIG table for run number %8i\n",rn));
+//     return -1;
+//   }
+// //-----------------------------------------------------------------------------
+// // if new run range, load the file
+// //-----------------------------------------------------------------------------
+//   if (fCalibRunRange != crr) {
+// 
+//     FILE* f  = fopen(crr->GetFilename(),"r");
+//     if (f == 0) {
+//       Error("Init",Form("missing file %s\n",crr->GetFilename()));
+//       return -2;
+//     }
+// 
+//     fCalibRunRange = crr;
+// 
+//     gInterpreter->LoadMacro(crr->GetFilename());
+//   }
+// 
+  if (fLastRun == -1) {
+//------------------------------------------------------------------------------
+// book histograms after the first database access
 //-----------------------------------------------------------------------------
-// at this point convert V --> mV
+    BookHistograms();
 //-----------------------------------------------------------------------------
-  for (int i=0; i<ns; i++) {
-    (*t )[i] = fGaasDataBlock->T(i);
-    (*v0)[i] = fGaasDataBlock->V(0,i)*1.e3;
+// now, that we know home many channels are processed, initialize them
+//-----------------------------------------------------------------------------
+    int ns = fCalibData->GetChannel(0)->fNSamples;
+    
+    for (int i=0; i<fCalibData->GetNChannels(); i++) {
+      fChannel[i] = new TReadoutChannel(i,ns);
+    }
+    
+    fLastRun = rn;
   }
+
+  // printf(" .... executing %s::GaasRecoModule_init_run\n",crr->GetFilename());
+  // gInterpreter->ProcessLine(Form("GaasRecoModule_init_run(%i);",rn));
+  // printf(" .... back from %s::GaasRecoModule_init_run\n",crr->GetFilename());
+
+ 
+//   fGain           = 1.; // fCalibData->GetChannelGain(ich);
+
+//   if (rn < 15) {
+//     fPolarity     =  -1;
+//     fMinSample[0] =   0;
+//     fMaxSample[0] = 200;
+//     fMinSample[1] = 320;
+//     fMaxSample[1] = 499;
+
+//     fMaxP2P       = 0.004;
+//     fMaxThreshold = 1.0e-3 ; // in mV
+
+//     if      (rn <=  6) {
+//       fFirstCell                = 235; // (int) (t0-5);
+//       fPulseIntegrationWindow   = 40 ; // (int) (fCalibData->GetPulseWindow(ich)*5);
+//     }
+//     else if (rn <= 12) {
+//       fFirstCell                = 230;
+//       fPulseIntegrationWindow   = 70 ;
+//     }
+//     else if (rn <= 14) {
+//       fFirstCell                = 235;
+//       fPulseIntegrationWindow   = 40 ;
+//     }
+//   }
+//   if ((rn >= 15) && (rn <= 29)) {
+// //-----------------------------------------------------------------------------
+// // calibration of alpha sources
+// //-----------------------------------------------------------------------------
+//     fPolarity     =  1;
+    
+//     if (rn == 15) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 150;
+//       fMinSample[1] = 320;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 180;
+//       fPulseIntegrationWindow = 100;
+//     }
+
+//     if (rn == 16) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 150;
+//       fMinSample[1] = 320;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 180;
+//       fPulseIntegrationWindow = 100;
+//     }
+
+//     if (rn == 17) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 320;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+
+//     if (rn <= 28) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 320;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else if (rn == 29) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//   }
+//   else if (rn <= 40) {
+// //-----------------------------------------------------------------------------
+// // calibration of alpha sources
+// //-----------------------------------------------------------------------------
+//     fPolarity     =  1;
+//     if (rn == 30) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else if (rn == 31) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else if (rn == 32) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else if (rn == 33) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else if (rn == 34) {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//     else {
+//       fMinSample[0] =   0;
+//       fMaxSample[0] = 140;
+//       fMinSample[1] = 280;
+//       fMaxSample[1] = 499;
+
+//       fMaxP2P       = 4.;
+//       fMaxThreshold = 100; // in mV
+
+//       fFirstCell              = 150;
+//       fPulseIntegrationWindow = 100;
+//     }
+//   }
+//   else if (rn < 48) {
+// //-----------------------------------------------------------------------------
+// // continue with the source calibrations:
+// // run 41: internal pulser + PO-210
+// // run 42: PO-210 only
+// //-----------------------------------------------------------------------------
+//     fPolarity     =  1;
+//     fMinSample[0] =   0;
+//     fMaxSample[0] = 140;
+//     fMinSample[1] = 280;
+//     fMaxSample[1] = 499;
+
+//     fMaxP2P       = 4.;
+//     fMaxThreshold = 100; // in mV
+
+//     fFirstCell              = 150;
+//     fPulseIntegrationWindow = 100;
+//   }
+
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChannel* Calib) {
+
+  if (Channel->GetUsed() == 0) return 0;
+
+  int ns            = Channel->GetNSamples();
+  // vector<float>* t  = Channel->GetT();
+  // vector<float>* v0 = Channel->GetV0();
 //-----------------------------------------------------------------------------
 // at this point can proceed with the waveform analysis and pedestal determination
 //-----------------------------------------------------------------------------
@@ -532,64 +550,62 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 //-----------------------------------------------------------------------------
   Channel->SetQ (0.);
   Channel->SetQ1(0.);
-  if (Channel->GetUsed() == 0) return 0;
 //-----------------------------------------------------------------------------
 // get calibration constants
 // pulse_integration_window - in units of channels
 //-----------------------------------------------------------------------------
-  // ich                      = Data->GetChannelID()->GetNumber();
-  //  _PulseIntegrationWindow   = 40; // (int) (fCalibData->GetPulseWindow(ich)*5);
-  // ped_mean                 = fCalibData->GetPedestal(ich);
   _PedSigma                   = 1.; // fCalibData->GetPedSigma(ich);
 
   sum = 0;
   qn  = 0;
-
-  vmin =  999.;
-  vmax = -999.;
+//-----------------------------------------------------------------------------
+// P2P before the signal
+//-----------------------------------------------------------------------------
+  vmin =  1.e6;
+  vmax = -1.e6;
   
-  for (int i=fMinSample[0]; i<fMaxSample[0]; i++) {
+  for (int i=Calib->fMinSample[0]; i<Calib->fMaxSample[0]; i++) {
     v   = Channel->V0(i);
     sum += v;
     qn  += 1;
     if (v < vmin) vmin = v;
     if (v > vmax) vmax = v;
   }
-					// p2p leading
+					// p2p before the signal
   Channel->fPar[0] = vmin;    //
   Channel->fPar[1] = vmax;    //
 
   pedestal = sum/qn;
   Channel->SetPedestal(pedestal);
-
-  vmin =  999.;
-  vmax = -999.;
+//-----------------------------------------------------------------------------
+// P2P after the signal
+//-----------------------------------------------------------------------------
+  vmin =  1.e6;
+  vmax = -1.e6;
   
-  for (int i=fMinSample[1]; i<fMaxSample[1]; i++) {
+  for (int i=Calib->fMinSample[1]; i<Calib->fMaxSample[1]; i++) {
     v   = Channel->V0(i);
     if (v < vmin) vmin = v;
     if (v > vmax) vmax = v;
   }
-					// p2p trailing
+					// p2p after the signal
   Channel->fPar[2] = vmin;    //
   Channel->fPar[3] = vmax;    //
 //-----------------------------------------------------------------------------
 // don't make assumptions about the signal polarity
 // find channel corresponding to the waveform maximum
 //-----------------------------------------------------------------------------
-  vmax = -1.e6;
+  vmax     = -1.e6;
   int cmax = -1;
-  for (int i=0; i<fNSamples; i++) {
-    v = (Channel->V0(i)-pedestal)*fPolarity;
+  for (int i=0; i<ns; i++) {
+    v = (Channel->V0(i)-pedestal)*Calib->fPolarity;
     if (v > vmax) {
       vmax = v;
       cmax = i;				// sample corresponding to the waveform maximum
     }
-    
+					// v1 - baseline subtracted, positive
     Channel->SetV1(i,v);
   }
-
-  Channel->SetMin1(cmax,vmax);
 //-----------------------------------------------------------------------------
 // try to determine the waveform T0
 //-----------------------------------------------------------------------------
@@ -645,15 +661,28 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 //-----------------------------------------------------------------------------
   vmax = -1.e6;
   cmax = -1;
-  for (int i=0; i<fNSamples; i++) {
-    v = (Channel->V0(i)-mean)*fPolarity;
+
+  float v0max = -1.e6;
+  int   c0max = -1;
+  
+  for (int i=0; i<ns; i++) {
+    v = (Channel->V0(i)-mean)*Calib->fPolarity;
     if (v > vmax) {
       vmax = v;
       cmax = i;
     }
+
+    float v0_plus = Channel->V0(i)*Calib->fPolarity;
+    if (v0_plus > v0max) {
+      v0max = v0_plus;
+      c0max = i;
+    }
     
     Channel->SetV1(i,v);
   }
+
+  Channel->SetV0Max(v0max);
+  Channel->SetI0Max(c0max);
 
   Channel->SetV1Max(vmax);
   Channel->SetI1Max(cmax);
@@ -664,7 +693,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
   Channel->fHist.fV1->Reset();
   Channel->fHist.fShape->Reset();
 
-  for (int cell=0; cell<fNSamples; cell++) {
+  for (int cell=0; cell<ns; cell++) {
     y = Channel->V0(cell);
     Channel->fHist.fV0->SetBinContent(cell+1,y);
     
@@ -683,9 +712,10 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 // poor-man's calib DB
 //-----------------------------------------------------------------------------
 //  min_cell = (int) (t0-10);
-  min_cell = fFirstCell;
+//  min_cell = Calib->fS1;
+  min_cell = t0;
   if (min_cell < 0) min_cell = 0;
-  max_cell = (int) (t0+fPulseIntegrationWindow);
+  max_cell = (int) (t0+Calib->fPulseIntWindow);
   if (max_cell > 1024) max_cell=1024;
 
   q = 0;
@@ -700,7 +730,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
   
   q  = q/_QScale;
   Channel->SetQ(q);
-  q1 = q*fGain;
+  q1 = q*Calib->fGain;
   Channel->SetQ1(q1);
 
   return 0;
@@ -710,8 +740,25 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel) {
 //-----------------------------------------------------------------------------
 int TGaasRecoModule::ProcessChannels() {
 
-  for (int i=0; i<kNChannels; i++) {
-    ReconstructChannel(fChannel[i]);
+  int ns  = fGaasDataBlock->GetNSamples();
+  int nch = fGaasDataBlock->GetNChannels();
+
+  for (int ich=0; ich<nch; ich++) {
+    TReadoutChannel* ch = fChannel[ich];
+
+    vector<float>* t  = ch->GetT();
+    vector<float>* v0 = ch->GetV0();
+  
+    ch->SetNSamples(ns);
+//-----------------------------------------------------------------------------
+// convert V --> mV, T is still in units of channels 
+//-----------------------------------------------------------------------------
+    for (int i=0; i<ns; i++) {
+      (*t )[i] = fGaasDataBlock->T(i);
+      (*v0)[i] = fGaasDataBlock->V(ich,i)*1.e3;  // V --> mV
+    }
+
+    ReconstructChannel(ch,fCalibData->GetChannel(ich));
   }
 
   return 0;
@@ -743,22 +790,26 @@ int TGaasRecoModule::Event(int ientry) {
 void TGaasRecoModule::Debug() {
 
   //  char        text[500];
+  int nch = fGaasDataBlock->GetNChannels();
 //-----------------------------------------------------------------------------
 // bit 0: All Events
 //-----------------------------------------------------------------------------
   if (GetDebugBit(2) == 1) {
-    for (int i=0; i<kNChannels; i++) { 
+    
+    for (int i=0; i<nch; i++) {
+      TGaasCalibChannel* cch = fCalibData->GetChannel(i);
+      
       float p2p1 = fChannel[i]->fPar[1]-fChannel[i]->fPar[0];
       float p2p2 = fChannel[i]->fPar[3]-fChannel[i]->fPar[2];
     
-      if ((p2p1 > fMaxP2P) || (p2p2 > fMaxP2P)) {
-	GetHeaderBlock()->Print(Form("TGaasRecoModule:bit002: channel: %4i background: p2p > %f",i,fMaxP2P));
+      if ((p2p1 > cch->fMaxP2P) || (p2p2 > cch->fMaxP2P)) {
+	GetHeaderBlock()->Print(Form("TGaasRecoModule:bit002: channel: %4i background: p2p > %f",i,cch->fMaxP2P));
       }
     }
   }
 
   if (GetDebugBit(3) == 1) {
-    for (int i=0; i<kNChannels; i++) { 
+    for (int i=0; i<nch; i++) { 
       if (fChannel[i]->fQ > -0.020) {
 	GetHeaderBlock()->Print(Form("TGaasRecoModule:bit003: channel: %4i q = %10.5f",
 				     i,fChannel[i]->fQ));
