@@ -1,6 +1,5 @@
 #-----------------------------------------------------------------------
-# pass 01 GaAs calibration tables
-# defines GAAS tables and run ranges
+# defines pass 01 GAAS tables and run ranges
 # 2019-04-27: start
 #-----------------------------------------------------------------------
 # table name         run range        file name(s)
@@ -16,4 +15,8 @@ readout_map        29        47      readout_map.06
 readout_map        48        49      readout_map.07
 readout_map        50        52      readout_map.08
 readout_map        53        54      readout_map.09
+readout_map        55        56      readout_map.10
+readout_map        57        73      readout_map.11
+readout_map        74        79      readout_map.12
+readout_map        80        88      readout_map.13
 #-----------------------------------------------------------------------

@@ -24,7 +24,7 @@ struct TScopeEvent {
   int      fNChannels;
   int      fNSamples;
   int      fTriggerSample;
-  int      fChannelUsed[kMaxNChannels];
+  int      fChannelID[kMaxNChannels];
   float    fSampleTime;
   float    fTriggerTime;
   

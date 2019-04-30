@@ -74,22 +74,21 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-      if (used != 0) { 
-	fChannel[fNChannels].fChannelID      = ich;
-	fChannel[fNChannels].fNSamples       = ns;
-	fChannel[fNChannels].fPolarity       = polarity;
-	fChannel[fNChannels].fMinSample[0]   = min_s0;
-	fChannel[fNChannels].fMaxSample[0]   = max_s0;
-	fChannel[fNChannels].fMinSample[1]   = min_s1;
-	fChannel[fNChannels].fMaxSample[1]   = max_s1;
-	fChannel[fNChannels].fMaxP2P         = max_p2p;
-	fChannel[fNChannels].fMaxThr         = max_thr;
-	fChannel[fNChannels].fS1             = s1;
-	fChannel[fNChannels].fPulseIntWindow = win;
-	fChannel[fNChannels].fGain           = gain;
-	
-	fNChannels++;
-      }
+      fChannel[fNChannels].fChannelID      = ich;
+      fChannel[fNChannels].fUsed           = used;
+      fChannel[fNChannels].fNSamples       = ns;
+      fChannel[fNChannels].fPolarity       = polarity;
+      fChannel[fNChannels].fMinSample[0]   = min_s0;
+      fChannel[fNChannels].fMaxSample[0]   = max_s0;
+      fChannel[fNChannels].fMinSample[1]   = min_s1;
+      fChannel[fNChannels].fMaxSample[1]   = max_s1;
+      fChannel[fNChannels].fMaxP2P         = max_p2p;
+      fChannel[fNChannels].fMaxThr         = max_thr;
+      fChannel[fNChannels].fS1             = s1;
+      fChannel[fNChannels].fPulseIntWindow = win;
+      fChannel[fNChannels].fGain           = gain;
+      
+      fNChannels++;
     }
 					// skip line
     fgets(c,100,f);

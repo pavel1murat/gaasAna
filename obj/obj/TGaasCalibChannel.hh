@@ -9,7 +9,8 @@
 //-----------------------------------------------------------------------------
 class TGaasCalibChannel: public TObject {
 public:
-  int             fChannelID     ;
+  int             fID            ;
+  int             fUsed          ;
   int             fNSamples      ;
   int             fPolarity      ;
   int             fMinSample[2]  ;
@@ -23,9 +24,10 @@ public:
   TGaasCalibChannel() {}
   ~TGaasCalibChannel() {}
 
-
-  int GetNSamples() { return fNSamples; }
-  int GetPolarity() { return fPolarity; }
+  int ID      () { return fID;     }
+  int Used    () { return fUsed;     }
+  int NSamples() { return fNSamples; }
+  int Polarity() { return fPolarity; }
 
   ClassDef(TGaasCalibChannel,1)
 };

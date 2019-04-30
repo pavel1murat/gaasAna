@@ -39,6 +39,8 @@ public:
   };
 
   struct ChannelHist_t : public HistBase_t {
+    int     fChannelID;
+
     TH1F*   fNSamples;			// 
 					// so far, assume one channel
     TH2F*   fWaveform[2]  ;

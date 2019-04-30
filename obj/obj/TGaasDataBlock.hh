@@ -3,6 +3,7 @@
 
 #include "TVectorT.h"
 #include "TMatrixT.h"
+#include "TArrayI.h"
 
 #include "Stntuple/obj/TStnDataBlock.hh"
 
@@ -15,8 +16,10 @@ public:
   friend class InitGaasDataBlock;
   
   enum {
-	kNFreeInts   =  5,                    // put in starting right from version 1
-	kNFreeFloats =  5
+	kNFreeInts_V1   =  5,                    // put in starting right from version 1
+	kNFreeFloats_V1 =  5,
+	kNFreeInts      =  5,                    // put in starting right from version 2
+	kNFreeFloats    =  5
   };
 
 protected:
@@ -28,8 +31,9 @@ protected:
   float           fTriggerTime;	        // not sure what exactly this is, but may be useful
   float           fFloat[kNFreeFloats]; // provision for future I/O expansion
   
-  TVectorT<float> fT;			// time samples
+  TVectorT<float> fT;			// [nsamples[ time samples
   TMatrixT<float> fV;			// data: [nchannels][nsamples]
+  TArrayI         fChannelID;           // [nchannels] *** added in V2
 //-----------------------------------------------------------------------------
 //  functions
 //-----------------------------------------------------------------------------
@@ -39,16 +43,18 @@ public:
   virtual ~TGaasDataBlock();
 					// ****** accessors
 
-  int       GetNSamples     () { return fNSamples;   }
-  int       GetNChannels    () { return fNChannels;  }
-  float     GetSampleTime   () { return fSampleTime; }
-  int       GetTriggerSample() { return fTriggerSample; }
-  float     GetTriggerTime  () { return fTriggerTime;   }
-  TVectorT<float>* GetT     () { return &fT;            }
-  TMatrixT<float>* GetV     () { return &fV;            }
+  int              GetNSamples     () { return fNSamples;   }
+  int              GetNChannels    () { return fNChannels;  }
+  float            GetSampleTime   () { return fSampleTime; }
+  int              GetTriggerSample() { return fTriggerSample; }
+  float            GetTriggerTime  () { return fTriggerTime;   }
+  TVectorT<float>* GetT            () { return &fT;            }
+  TMatrixT<float>* GetV            () { return &fV;            }
+  TArrayI*         GetChannelID    () { return &fChannelID; }
 
   float     T(int I) { return fT[I] ; }
   float     V(int Channel, int I) { return fV[Channel][I] ; }
+  int       ChannelID(int I) { return fChannelID[I]; }
 //-----------------------------------------------------------------------------
 // modifiers
 //-----------------------------------------------------------------------------
@@ -59,7 +65,12 @@ public:
   virtual void    Clear(Option_t* opt = "");
   virtual void    Print(Option_t* opt = "") const;
 
-  ClassDef(TGaasDataBlock,1)	// oscilloscope data block
+//-----------------------------------------------------------------------------
+// schema evolution
+//-----------------------------------------------------------------------------
+  void     ReadV1(TBuffer &R__b);
+
+  ClassDef(TGaasDataBlock,2)	// oscilloscope data block
 };
 
 #endif

@@ -84,22 +84,22 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
 
   ChannelHist_t* Hist =  (ChannelHist_t*) HistR;
 
-  int ns = fCalibData->GetChannel(0)->GetNSamples();
+  int ns = fCalibData->GetChannel(Hist->fChannelID)->NSamples();
 
   HBook1F(Hist->fNSamples    ,"nsamples","nsamples",100,  0  ,1000. ,Folder);
   HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]", ns,  0,    ns  ,1000, -50,  50,Folder);
-  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]", ns,  0,    ns  ,5000,-500,4500,Folder);
+  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]", ns,  0,    ns  ,5000,-500, 500,Folder);
   HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" , ns,  0,    ns, Folder);
-  HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"     ,1250     ,  0, 0.25,Folder);
-  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0, 500,Folder);
-  HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"    ,1250     ,  0,0.25,Folder);
-  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1000     ,  0, 500,Folder);
-  HBook1F(Hist->fV0Max       ,"v0max"   ,"V0Max"   ,250      ,  0, 50,Folder);
-  HBook1F(Hist->fV1Max       ,"v1max"   ,"V1Max"   ,500      ,  0, 50,Folder);
+  HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"     ,1000     ,  0, 5000,Folder);
+  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0,  500,Folder);
+  HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"    ,1000     ,  0, 5000,Folder);
+  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1000     ,  0,  500,Folder);
+  HBook1F(Hist->fV0Max       ,"v0max"   ,"V0Max"   ,500      ,  0, 250,Folder);
+  HBook1F(Hist->fV1Max       ,"v1max"   ,"V1Max"   ,500      ,  0, 250,Folder);
   HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,150,350,Folder);
   HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,500      ,-1.e-3,1.e-3,Folder);
   HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,500      ,-25,  25,Folder);
-  HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",500      , 0, 2.5e-3,Folder);
+  HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",500      , 0, 50    ,Folder);
   HBook1F(Hist->fSigmaPed[1] ,"sigped_1","SPed, mV",200      , 0, 2.    ,Folder);
   HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"  ,200      , 0, 10    ,Folder);
   HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"  ,200      , 0, 100   ,Folder);
@@ -141,20 +141,32 @@ void TGaasRecoModule::BookHistograms() {
   }
 
   //-----------------------------------------------------------------------------
-// book track histograms
+// book channel histograms
 //-----------------------------------------------------------------------------
   TString*  channel_selection   [kNChannelHistSets];
+  int       channel_id          [kNChannelHistSets];
+  
 
   for (int i=0; i<kNChannelHistSets; i++) { channel_selection[i] = NULL; }
 
   int nch = fCalibData->GetNChannels();
 
   for (int i=0; i<nch; i++) {
-    channel_selection[    i] = new TString("all channels");
-    channel_selection[100+i] = new TString("P2P < 0.0040");
-    channel_selection[200+i] = new TString("P2P >= 0.0040");
-    channel_selection[300+i] = new TString("P2P < 0.0040 and 3 < V1Min < 8"); // "QD signal" for run 14
-    channel_selection[400+i] = new TString("P2P < 0.0040 and V1Min > 8"    ); // "PD signal" for run 14
+    if (fCalibData->GetChannel(i)->Used() != 0) {
+      int cid = fCalibData->GetChannel(i)->ID();
+      
+      channel_selection[    i] = new TString("all channels");
+      channel_selection[100+i] = new TString("P2P < 0.0040");
+      channel_selection[200+i] = new TString("P2P >= 0.0040");
+      channel_selection[300+i] = new TString("P2P < 0.0040 and 3 < V1Min < 8"); // "QD signal" for run 14
+      channel_selection[400+i] = new TString("P2P < 0.0040 and V1Min > 8"    ); // "PD signal" for run 14
+
+      channel_id       [    i] = cid;
+      channel_id       [100+i] = cid;
+      channel_id       [200+i] = cid;
+      channel_id       [300+i] = cid;
+      channel_id       [400+i] = cid;
+    }
   }
 
   const char* folder_title;
@@ -166,6 +178,7 @@ void TGaasRecoModule::BookHistograms() {
       folder_title = channel_selection[i]->Data();
       if (! fol) fol = hist_folder->AddFolder(folder_name,folder_title);
       fHist.fChannel[i] = new ChannelHist_t;
+      fHist.fChannel[i]->fChannelID = channel_id[i];
       BookChannelHistograms(fHist.fChannel[i],Form("Hist/%s",folder_name));
     }
   }
@@ -252,25 +265,27 @@ void TGaasRecoModule::FillHistograms() {
   
   for (int i=0; i<nch; i++) {
     TReadoutChannel*   ch  = fChannel[i];
-    TGaasCalibChannel* cch = fCalibData->GetChannel(i);
+
+    int cid = ch->ID();
+    TGaasCalibChannel* cch = fCalibData->GetChannel(cid);
     
-    FillChannelHistograms(fHist.fChannel[i], ch);
+    FillChannelHistograms(fHist.fChannel[cid], ch);
       
     float p2p_1 = ch->fPar[1]-ch->fPar[0];
     float p2p_2 = ch->fPar[3]-ch->fPar[2];
     
     if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
-      FillChannelHistograms(fHist.fChannel[100+i], ch);
+      FillChannelHistograms(fHist.fChannel[100+cid], ch);
     }
     else {
-      FillChannelHistograms(fHist.fChannel[200+i], ch);
+      FillChannelHistograms(fHist.fChannel[200+cid], ch);
     }
 
     float v1max = ch->V1Max();
     
     if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
-      if      ((v1max >  3.) && (v1max < 8.)) FillChannelHistograms(fHist.fChannel[300+i], ch);
-      else if ( v1max >  8.)                  FillChannelHistograms(fHist.fChannel[400+i], ch);
+      if      ((v1max >  3.) && (v1max < 8.)) FillChannelHistograms(fHist.fChannel[300+cid], ch);
+      else if ( v1max >  8.)                  FillChannelHistograms(fHist.fChannel[400+cid], ch);
     }
   }
 }
@@ -319,10 +334,13 @@ int TGaasRecoModule::BeginRun() {
 //-----------------------------------------------------------------------------
 // now, that we know home many channels are processed, initialize them
 //-----------------------------------------------------------------------------
-    int ns = fCalibData->GetChannel(0)->fNSamples;
-    
+    int nch = 0;
     for (int i=0; i<fCalibData->GetNChannels(); i++) {
-      fChannel[i] = new TReadoutChannel(i,ns);
+      TGaasCalibChannel* cch = fCalibData->GetChannel(i);
+      if (cch->Used() != 0) {
+	fChannel[nch] = new TReadoutChannel(cch->fID,cch->fNSamples);
+	nch++;
+      }
     }
     
     fLastRun = rn;
@@ -750,6 +768,9 @@ int TGaasRecoModule::ProcessChannels() {
     vector<float>* v0 = ch->GetV0();
   
     ch->SetNSamples(ns);
+
+    int cid = fGaasDataBlock->ChannelID(ich);
+    ch->SetID(cid);
 //-----------------------------------------------------------------------------
 // convert V --> mV, T is still in units of channels 
 //-----------------------------------------------------------------------------
@@ -758,7 +779,7 @@ int TGaasRecoModule::ProcessChannels() {
       (*v0)[i] = fGaasDataBlock->V(ich,i)*1.e3;  // V --> mV
     }
 
-    ReconstructChannel(ch,fCalibData->GetChannel(ich));
+    ReconstructChannel(ch,fCalibData->GetChannel(cid));
   }
 
   return 0;

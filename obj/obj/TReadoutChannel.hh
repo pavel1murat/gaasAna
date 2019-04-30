@@ -74,6 +74,7 @@ public:
 //-----------------------------------------------------------------------------
 // setters
 //-----------------------------------------------------------------------------
+  void SetID       (int  ID)    { fID       = ID;   }
   void SetQ        (float Q)    { fQ        = Q;    }
   void SetQ1       (float Q)    { fQ1       = Q;    }
   void SetPedestal (float P)    { fPedestal = P;    }

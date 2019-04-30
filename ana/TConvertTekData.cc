@@ -221,7 +221,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 					// assume number of channels doesn't change within the run
   fScopeEvent.fNChannels    = -1;
 
-  for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelUsed[i] = 0;
+  for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelID[i] = -1;
   
   char* lineptr = (char*) malloc(buflen);
 
@@ -236,7 +236,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 //-----------------------------------------------------------------------------
 // read the data -2 channels
 //-----------------------------------------------------------------------------
-  int       nlines(0);
+  int       nlines(0), ichannel(0);
   TObjArray data;
   TObjArray words;
 
@@ -292,19 +292,21 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 
 	int ich = chname[2]-'1';
 
-	fScopeEvent.fChannelUsed[ich] = 1;
+	fScopeEvent.fChannelID[ichannel] = ich;
 	
 	TObjString* os = (TObjString*) words.At(9);
 	fScopeEvent.fSampleTime  = strtof(os->String().Data(),nullptr);
 
 	os = (TObjString*) words.At(13);
-	fScopeEvent.fVSlp[ich] = strtof(os->String().Data(),nullptr);
+	fScopeEvent.fVSlp[ichannel] = strtof(os->String().Data(),nullptr);
 
 	os = (TObjString*) words.At(14);
-	fScopeEvent.fVOff[ich] = strtof(os->String().Data(),nullptr);
+	fScopeEvent.fVOff[ichannel] = strtof(os->String().Data(),nullptr);
 
 	os = (TObjString*) words.At(15);
-	fScopeEvent.fVOff2[ich] = strtof(os->String().Data(),nullptr);
+	fScopeEvent.fVOff2[ichannel] = strtof(os->String().Data(),nullptr);
+
+	ichannel++;
       }
       continue;
     }
