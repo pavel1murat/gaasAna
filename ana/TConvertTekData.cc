@@ -17,6 +17,7 @@ TConvertTekData::TConvertTekData() {
 
 //-----------------------------------------------------------------------------
 TConvertTekData::~TConvertTekData() {
+  if (fFile) delete fFile;
 }
 
 //______________________________________________________________________________
@@ -368,9 +369,17 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   fFile->Write();
   fFile->Close();
 //-----------------------------------------------------------------------------
-// memory cleanup
+// end job : memory cleanup, make sure can call twice
 //-----------------------------------------------------------------------------
   free(lineptr);
-  
+
+  // delete fTree;
+  delete fFile;
+  delete fEvent;
+
+  fTree  = nullptr;
+  fEvent = nullptr;
+  fFile  = nullptr;
+
   return 0;
 }
