@@ -50,10 +50,10 @@ public:
     TH1F*   fV0Max;			// max ampl, raw
     TH1F*   fV1Max;			// max ampl, baseline subtracted
     TH1F*   fT0;			// T0
-    TH1F*   fPedestal[2];
-    TH1F*   fSigmaPed[2];
-    TH1F*   fP2P1    [2];
-    TH1F*   fP2P2    [2];
+    TH1F*   fPedestal;
+    TH1F*   fSigmaPed;
+    TH1F*   fP2P1 [2];
+    TH1F*   fP2P2 [2];
   };
 
   enum { kNEventHistSets   =  100 };

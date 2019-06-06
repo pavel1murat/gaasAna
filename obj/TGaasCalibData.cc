@@ -74,7 +74,7 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-      fChannel[fNChannels].fChannelID      = ich;
+      fChannel[fNChannels].fID             = ich;
       fChannel[fNChannels].fUsed           = used;
       fChannel[fNChannels].fNSamples       = ns;
       fChannel[fNChannels].fPolarity       = polarity;

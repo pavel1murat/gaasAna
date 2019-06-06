@@ -86,25 +86,23 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
 
   int ns = fCalibData->GetChannel(Hist->fChannelID)->NSamples();
 
-  HBook1F(Hist->fNSamples    ,"nsamples","nsamples",100,  0  ,1000. ,Folder);
-  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]", ns,  0,    ns  ,1000, -50,  50,Folder);
-  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]", ns,  0,    ns  ,5000,-500, 500,Folder);
-  HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" , ns,  0,    ns, Folder);
-  HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"     ,1000     ,  0, 5000,Folder);
-  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0,  500,Folder);
-  HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"    ,1000     ,  0, 5000,Folder);
-  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1000     ,  0,  500,Folder);
-  HBook1F(Hist->fV0Max       ,"v0max"   ,"V0Max"   ,500      ,  0, 250,Folder);
-  HBook1F(Hist->fV1Max       ,"v1max"   ,"V1Max"   ,500      ,  0, 250,Folder);
-  HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,150,350,Folder);
-  HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,500      ,-1.e-3,1.e-3,Folder);
-  HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,500      ,-25,  25,Folder);
-  HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",500      , 0, 50    ,Folder);
-  HBook1F(Hist->fSigmaPed[1] ,"sigped_1","SPed, mV",200      , 0, 2.    ,Folder);
-  HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"  ,200      , 0, 10    ,Folder);
-  HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"  ,200      , 0, 100   ,Folder);
-  HBook1F(Hist->fP2P2[0]     ,"p2p2_0"  ,"P2P2_0"  ,200      , 0, 10    ,Folder);
-  HBook1F(Hist->fP2P2[1]     ,"p2p2_1"  ,"P2P2_1"  ,200      , 0, 100   ,Folder);
+  HBook1F(Hist->fNSamples    ,"nsamples","nsamples"  ,100 ,  0, 1000. ,Folder);
+  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]"  , ns ,  0,    ns  ,5000,-250, 250,Folder);
+  HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]"  , ns ,  0,    ns  ,5000,-250, 250,Folder);
+  HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf"   , ns ,  0,    ns, Folder);
+  HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"       ,1000,  0, 5000,Folder);
+  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"       ,1000,  0,  500,Folder);
+  HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"      ,1000,  0, 5000,Folder);
+  HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"      ,1000,  0,  500,Folder);
+  HBook1F(Hist->fV0Max       ,"v0max"   ,"V0Max"     , 500,  0,  250,Folder);
+  HBook1F(Hist->fV1Max       ,"v1max"   ,"V1Max"     , 500,  0,  250,Folder);
+  HBook1F(Hist->fT0          ,"t0"      ,"T0"        , 400,150,  350,Folder);
+  HBook1F(Hist->fPedestal    ,"ped"     ,"Ped, mV"   ,1000,-25,   25,Folder);
+  HBook1F(Hist->fSigmaPed    ,"sigped"  ,"SigPed, mV", 500,  0,   50,Folder);
+  HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"    , 200,  0,   10,Folder);
+  HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"    , 200,  0,  100,Folder);
+  HBook1F(Hist->fP2P2[0]     ,"p2p2_0"  ,"P2P2_0"    , 200,  0,   10,Folder);
+  HBook1F(Hist->fP2P2[1]     ,"p2p2_1"  ,"P2P2_1"    , 200,  0,  100,Folder);
 }
 
 //_____________________________________________________________________________
@@ -216,10 +214,8 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
 					// N(points) >> 1, do not correct for that
   
   float sig_ped = sqrt(Channel->Chi2Ped());
-  Hist->fSigmaPed[0]->Fill(sig_ped);
-  Hist->fSigmaPed[1]->Fill(sig_ped);
-  Hist->fPedestal[0]->Fill(Channel->Pedestal());
-  Hist->fPedestal[1]->Fill(Channel->Pedestal());
+  Hist->fSigmaPed->Fill(sig_ped);
+  Hist->fPedestal->Fill(Channel->Pedestal());
 
   // voltage P2P in "pedestal" regions
   
@@ -235,11 +231,15 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
   Hist->fLastWaveform->Reset();
   
   for (int i=0; i<ns; i++) {
-    float v = Channel->V0(i);
+    float v0 = Channel->V0(i);
+    float v1 = Channel->V1(i);
     int   x = i+0.5;
-    Hist->fWaveform[0]    ->Fill(x,v);
-    Hist->fWaveform[1]    ->Fill(x,v);
-    Hist->fLastWaveform->SetBinContent(i+1,v);
+    Hist->fWaveform[0]    ->Fill(x,v0);
+
+    int x2 = i-Channel->T0()+200+0.5;
+    if ((x2>=0) && (x2<500)) Hist->fWaveform[1]->Fill(x2,v1);
+
+    Hist->fLastWaveform->SetBinContent(i+1,v0);
     Hist->fLastWaveform->SetBinError  (i+1,0);
   }
 }
@@ -659,19 +659,19 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
 
   Channel->SetT0(t0);
 //-----------------------------------------------------------------------------
-// recalculate pedestal using [T0-60,T0-10] samples interval
+// recalculate pedestal using [0,T0-20] samples interval
 //-----------------------------------------------------------------------------
-  min_cell = int(t0-60);
-  if (min_cell <= 0) min_cell=0;
-  max_cell = min_cell+50;
-  if (max_cell > 1023) max_cell = 1023;
+  max_cell = int(t0-20);
+  if (min_cell <= 0) max_cell = 0;
+  if (max_cell > ns) max_cell = ns;
+  min_cell = 0;
 //-----------------------------------------------------------------------------
 // FitPol0 returns chi2/ndof
 //-----------------------------------------------------------------------------
   TGaasUtils::FitPol0(&Channel->V0(0),min_cell,max_cell,&mean,&chi2);
   Channel->SetPedestal(mean);
   Channel->SetChi2Ped (chi2);
-  int npt = max_cell-min_cell+1;
+  int npt = max_cell-min_cell;
   Channel->SetNptPed  (npt);
 //-----------------------------------------------------------------------------
 // redefine V1, using real pedestal - fitted for a given event or the mean
@@ -734,7 +734,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
   min_cell = t0;
   if (min_cell < 0) min_cell = 0;
   max_cell = (int) (t0+Calib->fPulseIntWindow);
-  if (max_cell > 1024) max_cell=1024;
+  if (max_cell > ns) max_cell=ns;
 
   q = 0;
   for (int cell=min_cell; cell<max_cell; cell++) {
