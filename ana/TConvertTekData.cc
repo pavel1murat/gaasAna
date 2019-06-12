@@ -26,7 +26,7 @@ int TConvertTekData::OpenNewFile(const char* Filename) {
   int rc = 0;
   fFile = new TFile(Filename,"RECREATE");
   if (! fFile) {
-    Error("beginJob","an attempxt to open a new ROOT file %s failed",
+    Error("beginJob","an attempt to open a new ROOT file %s failed",
 	  fFileName.Data());
     rc = -1;
   }
@@ -328,6 +328,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 	while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
 	  TString line = lineptr;
 	  line = line.Strip(TString::kTrailing,'\n');
+	  line = line.Strip(TString::kTrailing,'\r');
 	  line = line.Strip(TString::kTrailing,' ');
 	  line = line.Strip(TString::kTrailing,',');
 	  int nw = Parse(&line,',',&numbers);

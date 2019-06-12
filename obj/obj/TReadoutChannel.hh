@@ -32,6 +32,9 @@ public:
   float          fV1Max;                // maximal V1 value for the whole waveform
   int            fI1Max;                // sample corresponding to maximal V1
   float          fT0;			//
+  float          fLeSlope;
+  float          fTeSlope;
+  float          fWidth;
 
   struct Hist_t {
     TH1F*        fV0;
@@ -68,6 +71,9 @@ public:
   float           Q       () { return fQ;     }
   float           Q1      () { return fQ1;    }
   float           T0      () { return fT0;    }
+  float           LeSlope () { return fLeSlope;  }
+  float           TeSlope () { return fTeSlope;  }
+  float           Width   () { return fWidth;    }
   float           Chi2Ped () { return fChi2Ped;  }
   int             NptPed  () { return fNptPed;   }
   float           Pedestal() { return fPedestal; }
@@ -82,6 +88,9 @@ public:
   void SetNptPed   (int   Npt ) { fNptPed   = Npt;  }
   void SetV1(int I, float V)    { fV1[I]    = V;    }
   void SetT0       (float T)    { fT0       = T;    }
+  void SetLeSlope  (float S)    { fLeSlope  = S;    }
+  void SetTeSlope  (float S)    { fTeSlope  = S;    }
+  void SetWidth    (float W)    { fWidth    = W;    }
 
   void SetV0Max    (float V) { fV0Max    = V; }
   void SetI0Max    (int   I) { fI0Max    = I; }

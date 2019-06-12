@@ -47,17 +47,21 @@ public:
     TH1F*   fLastWaveform ;
     TH1F*   fQ[2];			// charge
     TH1F*   fQ1[2];			// charge, corrected
-    TH1F*   fV0Max;			// max ampl, raw
-    TH1F*   fV1Max;			// max ampl, baseline subtracted
+    TH1F*   fV0Max[2];			// max ampl, raw
+    TH1F*   fV1Max[2];			// max ampl, baseline subtracted
     TH1F*   fT0;			// T0
     TH1F*   fPedestal[2];
     TH1F*   fSigmaPed[2];
     TH1F*   fP2P1    [2];
     TH1F*   fP2P2    [2];
+    TH1F*   fLeSlope;                   // leading edge slope
+    TH1F*   fTeSlope;                   // trailing edge slope
+    TH1F*   fWidth;
+    TH2F*   fW_v_H;                     // width vs height
   };
 
-  enum { kNEventHistSets   =  100 };
-  enum { kNChannelHistSets =  500 };
+  enum { kNEventHistSets   =   100 };
+  enum { kNChannelHistSets = 10000 };
 
   struct Hist_t {
     EventHist_t*   fEvent  [kNEventHistSets];
@@ -90,7 +94,8 @@ public:
   // int                fPulseIntegrationWindow;
   // float              fGain;
 
-  int                fPolarity;   // signal polarity - set by hand
+  int                fPolarity;   // signal polarity, comes from calib db
+  float              fV1Max[2];   // thresholds for separating two types of pulses
 
   TReadoutChannel*   fChannel[kMaxNChannels];
 //-----------------------------------------------------------------------------
@@ -108,6 +113,7 @@ public:
 // modifiers
 //-----------------------------------------------------------------------------
   void    SetFillHistograms(int Fill) { fFillHistograms = Fill; }
+  void    SetV1Max(float V0, float V1) { fV1Max[0] = V0; fV1Max[1] = V1; }
 //-----------------------------------------------------------------------------
 // overloaded methods of TStnModule
 //-----------------------------------------------------------------------------
