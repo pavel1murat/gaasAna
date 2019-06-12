@@ -19,8 +19,12 @@ readout_map        55        56      readout_map.10
 readout_map        57        73      readout_map.11
 readout_map        74        79      readout_map.12
 readout_map        80        88      readout_map.13
+<<<<<<< HEAD
 readout_map        92        96      readout_map.14
 readout_map        97       102      readout_map.15
 readout_map       103       104      readout_map.16
 readout_map       105       106      readout_map.17
+=======
+readout_map        89        91      readout_map.14
+>>>>>>> 3daebf884a2ce7116044ab53b5a7ebec3daf4369
 #-----------------------------------------------------------------------

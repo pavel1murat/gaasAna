@@ -16,6 +16,8 @@ TReadoutChannel::TReadoutChannel() {
   fPedestal    = -999.;
   fNptPed      = -1;
   fChi2Ped     = -999.;
+  fV0Max       = -999.;
+  fI0Max       = -1;
   fV1Max       = -999.;
   fI1Max       = -1;
   fT0          = -999.;
@@ -38,6 +40,8 @@ TReadoutChannel::TReadoutChannel(int ID, int NSamples) {
   fPedestal    = -999.;
   fNptPed      = -1;
   fChi2Ped     = -999.;
+  fV0Max       = -999.;
+  fI0Max       = -1;
   fV1Max       = -999.;
   fI1Max       = -1;
   fT0          = -999.;

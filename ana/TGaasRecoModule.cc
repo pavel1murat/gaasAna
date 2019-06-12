@@ -652,9 +652,10 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
   min_cell = t0;
   if (min_cell < 0) min_cell = 0;
 
-//  max_cell = (int) (t0+Calib->fPulseIntWindow);
+  //  max_cell = (int) (t0+Calib->fPulseIntWindow);
+
   max_cell = t1;
-  if (max_cell > 1024) max_cell=1024;
+  if (max_cell > ns) max_cell=ns;
 
   q = 0;
   for (int cell=min_cell; cell<max_cell; cell++) {

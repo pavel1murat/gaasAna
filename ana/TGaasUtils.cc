@@ -11,6 +11,7 @@ TGaasUtils::~TGaasUtils() {
 
 //-----------------------------------------------------------------------------
 // with weights equal to one
+// 'IMax' is the first not used cell outside the range
 //-----------------------------------------------------------------------------
 int TGaasUtils::FitPol0(const float* V, int IMin, int IMax, double* Par, double* Chi2) {
 
@@ -22,7 +23,7 @@ int TGaasUtils::FitPol0(const float* V, int IMin, int IMax, double* Par, double*
   sx  = 0;
   sx2 = 0;
   
-  for (int i=IMin; i<=IMax; i+=1) {
+  for (int i=IMin; i<IMax; i+=1) {
     sx  += V[i];
     sx2 += V[i]*V[i];
     n   += 1;
@@ -54,7 +55,7 @@ int TGaasUtils::FitPol1(const float* V, int IMin, int IMax, double* Par, double*
   sxy = 0;
   sy2 = 0;
   
-  for (int i=IMin; i<=IMax; i+=1 ) {
+  for (int i=IMin; i<IMax; i+=1 ) {
     x   = i+ 0.5;
     y   = V[i];
     sx  += x;
