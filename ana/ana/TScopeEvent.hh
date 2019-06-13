@@ -27,6 +27,8 @@ struct TScopeEvent {
   int      fChannelID[kMaxNChannels];
   float    fSampleTime;
   float    fTriggerTime;
+  TString  fRunStartTime;
+  TString  fRunEndTime;
   
   float    fT[5000];			// this is a shortcut...
   float    fV[kMaxNChannels][5000];		//

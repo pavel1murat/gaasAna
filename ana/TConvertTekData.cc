@@ -221,7 +221,31 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   fScopeEvent.fStnVersion   = "v7_3_5";
 					// assume number of channels doesn't change within the run
   fScopeEvent.fNChannels    = -1;
+  fScopeEvent.fRunStartTime = "undefined";
+  fScopeEvent.fRunEndTime   = "undefined";
 
+  TString cmd = Form("cat ../%s | grep RUN_",fFileName.Data());
+  pipe = gSystem->OpenPipe(cmd.Data(),"r");
+  //  int ntxt = 0;
+
+  TObjArray w0;
+
+  while (fgets(buf,50,pipe)) {
+    TString s(buf);
+    s = s.Strip(TString::kTrailing,'\n');
+    if      (s.Index("RUN_START_TIME:") == 0) {
+      Parse(&s,' ',&w0);
+      fScopeEvent.fRunStartTime = ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
+    }
+    else if (s.Index("RUN_END_TIME:") == 0) {
+      Parse(&s,' ',&w0);
+      fScopeEvent.fRunEndTime =  ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
+
+
+    }
+  }
+  gSystem->ClosePipe(pipe);
+  
   for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelID[i] = -1;
   
   char* lineptr = (char*) malloc(buflen);
@@ -245,6 +269,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 //-----------------------------------------------------------------------------
 // read a .CSV file - so far, Tektronix format
 //-----------------------------------------------------------------------------
+  
   while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
 
     printf("line: %s\n",lineptr);

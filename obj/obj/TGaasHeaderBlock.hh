@@ -4,11 +4,15 @@
 #ifndef TGaasHeaderBlock_hh
 #define TGaasHeaderBlock_hh
 
+#include "TString.h"
 #include "Stntuple/obj/TStnHeaderBlock.hh"
 
 class TGaasHeaderBlock: public TStnHeaderBlock {
+protected:
+  TString    fRunStartTime;
+  TString    fRunEndTime;
 public:
-
+  
   friend class InitGaasHeaderBlock;
 //-----------------------------------------------------------------------------
 //  functions
@@ -20,7 +24,7 @@ public:
   TGaasHeaderBlock();
   virtual ~TGaasHeaderBlock();
 
-  ClassDef(TGaasHeaderBlock,1)	// Event Header block for GaAs header
+  ClassDef(TGaasHeaderBlock,2)	// Event Header block for GaAs header
 };
 
 #endif

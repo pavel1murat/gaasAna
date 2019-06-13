@@ -27,6 +27,8 @@ int InitGaasHeaderBlock::InitDataBlock(TStnDataBlock* Block, AbsEvent* Event, in
   block->fTrigWord      = fScopeEvent->fTrigWord;
   block->fCpu           = fScopeEvent->fCpu;
   block->fStnVersion    = fScopeEvent->fStnVersion;
+  block->fRunStartTime  = fScopeEvent->fRunStartTime;
+  block->fRunEndTime    = fScopeEvent->fRunEndTime;
 
   block->f_EventNumber  = fScopeEvent->fEventNumber;
   block->f_RunNumber    = fScopeEvent->fRunNumber;
