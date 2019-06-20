@@ -8,9 +8,16 @@
 #include "Stntuple/obj/TStnHeaderBlock.hh"
 
 class TGaasHeaderBlock: public TStnHeaderBlock {
+  struct TGaasHeaderBlock_v2 {
+    TString    fRunStartTime;
+    TString    fRunEndTime;
+  };
 protected:
   TString    fRunStartTime;
   TString    fRunEndTime;
+  int        fTime;         // event time in unix format [ added in V3 ]
+  int        fTime1;	    // milliseconds and microseconds [ added in V3 ]
+  int        fTime2;	    // nano- and pico-second parts of a timestamp [ added in V3 ]
 public:
   
   friend class InitGaasHeaderBlock;
@@ -23,8 +30,18 @@ public:
 //-----------------------------------------------------------------------------
   TGaasHeaderBlock();
   virtual ~TGaasHeaderBlock();
+//-----------------------------------------------------------------------------
+// overloaded methods of TObject
+//-----------------------------------------------------------------------------
+  virtual void    Clear(Option_t* opt = "");
+  virtual void    Print(Option_t* opt = "") const;
+//-----------------------------------------------------------------------------
+// schema evolution
+//-----------------------------------------------------------------------------
+  void ReadV1(TBuffer &R__b);
+  void ReadV2(TBuffer &R__b);
 
-  ClassDef(TGaasHeaderBlock,2)	// Event Header block for GaAs header
+  ClassDef(TGaasHeaderBlock,3)	// Event Header block for GaAs header
 };
 
 #endif

@@ -12,6 +12,21 @@
 
 ClassImp(TGaasHeaderBlock)
 
+//-----------------------------------------------------------------------------
+void TStnHeaderBlock::ReadV1(TBuffer &R__b) {
+  TStnHeaderBlock::Streamer(R__b);
+
+  fRunStartTime = "default";
+  fRunEndTime   = "default";
+}
+
+//-----------------------------------------------------------------------------
+void TStnHeaderBlock::ReadV2(TBuffer &R__b) {
+  TStnHeaderBlock::Streamer(R__b);
+  R__b >> fRunStartTime;
+  R__b >> fRunEndTime;
+}
+
 //______________________________________________________________________________
 void TGaasHeaderBlock::Streamer(TBuffer &R__b)
 {
@@ -19,14 +34,15 @@ void TGaasHeaderBlock::Streamer(TBuffer &R__b)
 
   if (R__b.IsReading()) {
     Version_t R__v = R__b.ReadVersion();
-    TStnHeaderBlock::Streamer(R__b);
-    if (R__v == 1) {
-      fRunStartTime = "default";
-      fRunEndTime   = "default";
-    }
-    else if (R__v == 2) {
+    if      (R__v == 1) ReadV1(R__b);
+    else if (R__v == 2) ReadV2(R__b);
+    else {
+      TStnHeaderBlock::Streamer(R__b);
       R__b >> fRunStartTime;
       R__b >> fRunEndTime;
+      R__b >> fTime;
+      R__b >> fTime1;
+      R__b >> fTime2;
     }
   }
   else {
@@ -34,6 +50,9 @@ void TGaasHeaderBlock::Streamer(TBuffer &R__b)
     TStnHeaderBlock::Streamer(R__b);
     R__b << fRunStartTime;
     R__b << fRunEndTime;
+    R__b << fTime;
+    R__b << fTime1;
+    R__b << fTime2;
   }
 }
 
@@ -44,5 +63,16 @@ TGaasHeaderBlock::TGaasHeaderBlock(): TStnHeaderBlock() {
 
 //_____________________________________________________________________________
 TGaasHeaderBlock::~TGaasHeaderBlock() {
+}
+
+//_____________________________________________________________________________
+void TGaasHeaderBlock::Clear(Option_t* opt) {
+}
+
+//_____________________________________________________________________________
+void TGaasHeaderBlock::Print(Option_t* opt) const {
+  TStnHeaderBlock::Print(opt);
+  printf(" Run start time: %s\n",fRunStartTime.Data());
+  printf(" Run end   time: %s\n",fRunEndTime.Data());
 }
 

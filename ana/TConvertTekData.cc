@@ -224,15 +224,24 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   fScopeEvent.fRunStartTime = "undefined";
   fScopeEvent.fRunEndTime   = "undefined";
 
-  TString cmd = Form("cat ../%s | grep RUN_",fFileName.Data());
+  char fn_txt[200];
+
+  sprintf(fn_txt,"%s/qdgaas.fnal.%06i.txt",Dirname,RunNumber);
+  FILE* f = fopen(fn_txt,"r");
+  if (f == nullptr)     {
+    printf(" Can\'t open input file %s. BAIL OUT\n",fn_txt);
+    return -1;
+  }
+
+  TString cmd = Form("cat %s | grep RUN_",fn_txt);
   pipe = gSystem->OpenPipe(cmd.Data(),"r");
-  //  int ntxt = 0;
 
   TObjArray w0;
 
   while (fgets(buf,50,pipe)) {
     TString s(buf);
     s = s.Strip(TString::kTrailing,'\n');
+    s = s.Strip(TString::kTrailing,'\r');
     if      (s.Index("RUN_START_TIME:") == 0) {
       Parse(&s,' ',&w0);
       fScopeEvent.fRunStartTime = ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
@@ -240,8 +249,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
     else if (s.Index("RUN_END_TIME:") == 0) {
       Parse(&s,' ',&w0);
       fScopeEvent.fRunEndTime =  ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
-
-
+      printf(">>>> found RUN_END_TIME:\n");
     }
   }
   gSystem->ClosePipe(pipe);
@@ -251,13 +259,6 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   char* lineptr = (char*) malloc(buflen);
 
   int  nevents(0);
-  
-  sprintf(buf,"%s/qdgaas.fnal.%06i.txt",Dirname,RunNumber);
-  FILE* f = fopen(buf,"r");
-  if (f == nullptr)     {
-    printf(" Can\'t open input file %s. BAIL OUT\n",buf);
-    return -1;
-  }
 //-----------------------------------------------------------------------------
 // read the data -2 channels
 //-----------------------------------------------------------------------------
@@ -272,16 +273,284 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   
   while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
 
-    printf("line: %s\n",lineptr);
+    printf("line: %s",lineptr);
 
     // skip unneeded lines
 
     TString s(lineptr);
     s = s.Strip(TString::kTrailing,'\n');
+    s = s.Strip(TString::kTrailing,'\r');
     s = s.Strip();			        // strip trailing spaces
 
     int loc = s.Index("(u\'GPIB0::");
     if (loc == 0) continue;
+    if (s.Index("RUN_"      ) == 0) continue;
+    if (s.Index("TEKTRONIX" ) == 0) continue;
+    if (s.Index("header"    ) == 0) continue;   // assume header = 0 (no headers)
+    if (s.Index("DATA:"     ) == 0) {
+
+      int nw = Parse(&s,';',&words);
+
+      TObjString* os2 = (TObjString*) words.At(2);
+      TObjArray w2;
+
+      fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
+
+      TObjString* os = (TObjString*) words.At(nw-3);
+      fScopeEvent.fNSamples  = strtol(os->String().Data(),nullptr,10);
+      
+      continue;   // number of channels is defined at run-time
+    }
+    
+    //    if (s.Index("WFMOutpre:CH1:") == 0) {
+    if (s.Index("WFMOutpre:") == 0) {
+
+      Parse(&s,';',&words);
+      int nw = words.GetEntries();
+
+      if (nw > 5) {
+//-----------------------------------------------------------------------------
+// figure out which channel - split by ':'
+// chname = "CH1", "CH2" etc
+//-----------------------------------------------------------------------------
+	TObjArray w0;
+	TString s0 = ((TObjString*) words.At(0))->String();
+	Parse(&s0,':',&w0);
+
+	TString chname = ((TObjString*) w0.At(1))->String();
+
+	int ich = chname[2]-'1';
+
+	fScopeEvent.fChannelID[ichannel] = ich;
+	
+	TObjString* os = (TObjString*) words.At(9);
+	fScopeEvent.fSampleTime  = strtof(os->String().Data(),nullptr);
+
+	os = (TObjString*) words.At(13);
+	fScopeEvent.fVSlp[ichannel] = strtof(os->String().Data(),nullptr);
+
+	os = (TObjString*) words.At(14);
+	fScopeEvent.fVOff[ichannel] = strtof(os->String().Data(),nullptr);
+
+	os = (TObjString*) words.At(15);
+	fScopeEvent.fVOff2[ichannel] = strtof(os->String().Data(),nullptr);
+
+	ichannel++;
+      }
+      continue;
+    }
+
+    if (s.Length() == 0) continue;
+
+    if (s.Index("trigger") == 0) {
+      TObjArray w;
+      Parse(&s,' ',&w);
+      TObjString* os = (TObjString*) w.At(2);
+      fScopeEvent.fEventNumber = strtol(os->String().Data(),nullptr,10)+1;
+//-----------------------------------------------------------------------------
+// multiple events in one file, read one event, 20 numbers per line
+//-----------------------------------------------------------------------------
+      for (int ich=0; ich<fScopeEvent.fNChannels; ich++) {
+	int loc = 0;
+	TObjArray numbers;
+	while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
+	  TString line = lineptr;
+	  line = line.Strip(TString::kTrailing,'\n');
+	  line = line.Strip(TString::kTrailing,'\r');
+	  line = line.Strip(TString::kTrailing,' ');
+	  line = line.Strip(TString::kTrailing,',');
+	  int nw = Parse(&line,',',&numbers);
+	  for (int i=0; i<nw; i++) {
+	    const char* num = ((TObjString*) numbers.At(i))->String().Data();
+	    int val = strtol(num,nullptr,10);
+	    fScopeEvent.fV[ich][loc] = (val-fScopeEvent.fVOff[ich])*fScopeEvent.fVSlp[ich] + fScopeEvent.fVOff2[ich];
+	    loc++;
+	  }
+					// next line
+	  if (loc >= fScopeEvent.fNSamples) break;
+	}
+      }
+//-----------------------------------------------------------------------------
+// initialize times
+//-----------------------------------------------------------------------------
+      for (int i=0; i<fScopeEvent.fNSamples; i++) {
+	fScopeEvent.fT[i] = fScopeEvent.fSampleTime*(i+0.5);
+      }
+//-----------------------------------------------------------------------------
+// all event data read in,
+//-----------------------------------------------------------------------------
+    }
+
+    nlines++;
+    //    printf("line: %5i nwords: %5i\n", nlines,nwords);
+//-----------------------------------------------------------------------------
+// data read in
+// now need to save as an NTuple
+//-----------------------------------------------------------------------------
+    fEvent->Init(fAbsEvent,0);
+    fTree->Fill();
+
+    nevents++;
+  }
+
+  printf(" --- finish after processing: %i events\n",nevents);
+  
+  fFile->Write();
+  fFile->Close();
+//-----------------------------------------------------------------------------
+// end job : memory cleanup, make sure can call twice
+//-----------------------------------------------------------------------------
+  free(lineptr);
+
+  // delete fTree;
+  delete fFile;
+  delete fEvent;
+
+  fTree  = nullptr;
+  fEvent = nullptr;
+  fFile  = nullptr;
+
+  return 0;
+}
+//-----------------------------------------------------------------------------
+// Format = 1: Inifiniscope (Albany   data)
+//-----------------------------------------------------------------------------
+int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const char* FnPattern, int Format) {
+
+//-----------------------------------------------------------------------------
+// beginJob
+//-----------------------------------------------------------------------------
+  fFile     = 0;
+  fFileName = Form("gaasqd_fnal.%06i_00000000",RunNumber);
+  
+  if (! fEvent      ) {
+    fEvent       = new TStnEvent();
+    fgMaxFileSize = 8000;
+  }
+
+  beforeBeginJob();
+
+  // book the tree, for ROOT 3 kludge split mode: set it always to
+  // "non-split,old"
+  // header block, however is always written in split mode
+
+  fTree   = new TTree("STNTUPLE", "STNTUPLE");
+
+  TStnDataBlock* block;
+
+  block = AddDataBlock("HeaderBlock","TGaasHeaderBlock",
+		       fgBufferSize,
+		       0, // 99,                          // fSplitMode.value(), always split
+		       fgCompressionLevel);
+
+  InitGaasHeaderBlock* ighb = new InitGaasHeaderBlock();
+  ighb->SetScopeEvent(&fScopeEvent);
+  block->SetInitBlock(ighb);
+
+  block = AddDataBlock("GaasDataBlock","TGaasDataBlock",
+		       fgBufferSize,
+		       0, // 99,                          // fSplitMode.value(), always split
+		       fgCompressionLevel);
+
+  InitGaasDataBlock* igdb = new InitGaasDataBlock();
+  igdb->SetScopeEvent(&fScopeEvent);
+  block->SetInitBlock(igdb);
+  
+  FILE* pipe;
+  pipe = gSystem->OpenPipe(
+     "cat /proc/cpuinfo | grep MHz | tail -1 | awk '{print $4}'","r");
+  fscanf(pipe,"%f",&fCpuSpeed);
+  gSystem->ClosePipe(pipe);
+
+  afterBeginJob();
+//-----------------------------------------------------------------------------
+// begin run Dir=/projects/gaas/data/runs-0015-0029
+//-----------------------------------------------------------------------------
+  //  return 0;
+
+  char buf[1000];
+
+  int  buflen(1000);
+//-----------------------------------------------------------------------------
+// want "events" to be ordered in time sequence,
+// event == file here
+// form header
+//-----------------------------------------------------------------------------
+  fScopeEvent.fRunNumber    = RunNumber;
+  fScopeEvent.fSubrunNumber = 0;
+  fScopeEvent.fMcFlag       = 0;
+  fScopeEvent.fVersion      = 1;
+  fScopeEvent.fBrCode       = 0;
+  fScopeEvent.fGoodTrig     = 1;
+  fScopeEvent.fTrigWord     = 0;
+  fScopeEvent.fCpu          = 0;
+  fScopeEvent.fStnVersion   = "v7_3_5";
+					// assume number of channels doesn't change within the run
+  fScopeEvent.fNChannels    = -1;
+  fScopeEvent.fRunStartTime = "undefined";
+  fScopeEvent.fRunEndTime   = "undefined";
+
+  char fn_txt[200];
+
+  sprintf(fn_txt,"%s/qdgaas.fnal.%06i.txt",Dirname,RunNumber);
+  FILE* f = fopen(fn_txt,"r");
+  if (f == nullptr)     {
+    printf(" Can\'t open input file %s. BAIL OUT\n",fn_txt);
+    return -1;
+  }
+
+  TString cmd = Form("cat %s | grep RUN_",fn_txt);
+  pipe = gSystem->OpenPipe(cmd.Data(),"r");
+
+  TObjArray w0;
+
+  while (fgets(buf,50,pipe)) {
+    TString s(buf);
+    s = s.Strip(TString::kTrailing,'\n');
+    s = s.Strip(TString::kTrailing,'\r');
+    if      (s.Index("RUN_START_TIME:") == 0) {
+      Parse(&s,' ',&w0);
+      fScopeEvent.fRunStartTime = ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
+    }
+    else if (s.Index("RUN_END_TIME:") == 0) {
+      Parse(&s,' ',&w0);
+      fScopeEvent.fRunEndTime =  ((TObjString*) w0[1])->String()+" "+((TObjString*) w0[2])->String();
+      printf(">>>> found RUN_END_TIME:\n");
+    }
+  }
+  gSystem->ClosePipe(pipe);
+  
+  for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelID[i] = -1;
+  
+  char* lineptr = (char*) malloc(buflen);
+
+  int  nevents(0);
+//-----------------------------------------------------------------------------
+// read the data -2 channels
+//-----------------------------------------------------------------------------
+  int       nlines(0), ichannel(0);
+  TObjArray data;
+  TObjArray words;
+
+  printf(" 0001: start reading\n");
+//-----------------------------------------------------------------------------
+// read a .CSV file - so far, Tektronix format
+//-----------------------------------------------------------------------------
+  
+  while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
+
+    printf("line: %s",lineptr);
+
+    // skip unneeded lines
+
+    TString s(lineptr);
+    s = s.Strip(TString::kTrailing,'\n');
+    s = s.Strip(TString::kTrailing,'\r');
+    s = s.Strip();			        // strip trailing spaces
+
+    int loc = s.Index("(u\'GPIB0::");
+    if (loc == 0) continue;
+    if (s.Index("RUN_"      ) == 0) continue;
     if (s.Index("TEKTRONIX" ) == 0) continue;
     if (s.Index("header"    ) == 0) continue;   // assume header = 0 (no headers)
     if (s.Index("DATA:"     ) == 0) {

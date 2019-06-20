@@ -69,7 +69,8 @@ public:
 
   int Parse(const TString*, char, TObjArray*);
 
-  int ReadGaasData(const char* Dir, int RunNumber, const char* FnPattern, int Format);
+  int ReadGaasData   (const char* Dir, int RunNumber, const char* FnPattern, int Format);
+  int ReadGaasDataNew(const char* Dir, int RunNumber, const char* FnPattern, int Format);
 
   //  ClassDef(TConvertTekData,0)
 };

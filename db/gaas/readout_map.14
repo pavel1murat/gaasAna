@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------------
-# 2019-04-29 P.Murat : data taking with N1801-S3-Dx runs 89-90
+# 2019-04-29 P.Murat : data taking with N1801-S3-Dx runs 89-91
 # read out CH3 (#2): Ampl: MINIC+Sergey, collimated source
 #
 # cID used  ns  pol minS[0] maxS[0] minS[1] maxS[1] maxP2P maxThr   S1  Win gain  V0ff

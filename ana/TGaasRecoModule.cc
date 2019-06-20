@@ -177,22 +177,22 @@ void TGaasRecoModule::BookHistograms() {
       channel_selection[ 600+i] = new TString("LeSlope < 0.03" );              // leading slope
       channel_selection[ 700+i] = new TString("0.03 <= LeSlope < 0.09" );      // leading slope
       channel_selection[ 800+i] = new TString("LeSlope >= 0.09" );             // leading slope
-      channel_selection[ 900+i] = new TString("Q <= 17.6" );                   // charge
-      channel_selection[1000+i] = new TString("1.76 < Q < 7.04 " );             // charge
+      channel_selection[ 900+i] = new TString("Q <= 1.76" );                   // charge
+      channel_selection[1000+i] = new TString("1.76 < Q < 7.04 " );            // charge
       channel_selection[1100+i] = new TString("Q >= 7.04" );                   // charge
 
-      channel_id       [    i] = cid; 
-      channel_id       [100+i] = cid;
-      channel_id       [200+i] = cid;
-      channel_id       [300+i] = cid;
-      channel_id       [400+i] = cid;
-      channel_id       [500+i] = cid;
-      channel_id       [600+i] = cid;
-      channel_id       [700+i] = cid;
-      channel_id       [800+i] = cid;
-      channel_id       [900+i] = cid;
-      channel_id      [1000+i] = cid;
-      channel_id      [1100+i] = cid;
+      channel_id       [     i] = cid; 
+      channel_id       [ 100+i] = cid;
+      channel_id       [ 200+i] = cid;
+      channel_id       [ 300+i] = cid;
+      channel_id       [ 400+i] = cid;
+      channel_id       [ 500+i] = cid;
+      channel_id       [ 600+i] = cid;
+      channel_id       [ 700+i] = cid;
+      channel_id       [ 800+i] = cid;
+      channel_id       [ 900+i] = cid;
+      channel_id       [1000+i] = cid;
+      channel_id       [1100+i] = cid;
     }
   }
 
