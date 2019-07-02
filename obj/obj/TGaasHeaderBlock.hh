@@ -15,9 +15,10 @@ class TGaasHeaderBlock: public TStnHeaderBlock {
 protected:
   TString    fRunStartTime;
   TString    fRunEndTime;
-  int        fTime;         // event time in unix format [ added in V3 ]
-  int        fTime1;	    // milliseconds and microseconds [ added in V3 ]
-  int        fTime2;	    // nano- and pico-second parts of a timestamp [ added in V3 ]
+  int        fEpoch;        // event time in unix format [ added in V3 ]
+  int        fUSec;	    // milliseconds*1000 and microseconds [ added in V3 ]
+  int        fPSec;	    // nano-*1000 and pico-second parts of a timestamp [ added in V3 ]
+  float      fDeltaT;       // time from the previous frame in the sequence
 public:
   
   friend class InitGaasHeaderBlock;

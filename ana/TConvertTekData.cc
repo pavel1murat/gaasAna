@@ -4,15 +4,20 @@
 // 
 // need to revise the data buffer dimensions for new files
 ///////////////////////////////////////////////////////////////////////////////
+#include <vector>
+#include <time.h>
+
 #include "gaasAna/ana/TConvertTekData.hh"
 
 // ClassImp(TConvertTekData)
 //-----------------------------------------------------------------------------
 TConvertTekData::TConvertTekData() {
-  fEvent    = nullptr;
-  fFile     = nullptr;
-  fFileName = "";
-  fDirName  = "";
+  fEvent     = nullptr;
+  fFile      = nullptr;
+  fFileName  = "";
+  fDirName   = "";
+  fDebugMode = 0;
+  fNFrames   = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -37,7 +42,7 @@ int TConvertTekData::OpenNewFile(const char* Filename) {
 int TConvertTekData::beforeBeginJob() {
 					// return code
   int rc  =  0;
-				// give more time to define TModule::fName
+			        	// give more time to define TModule::fName
   //  fDirName = GetName();
 
   if ((fFileName != "") && (fFile == 0)) {
@@ -295,7 +300,9 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
       TObjArray w2;
 
       fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
-
+//-----------------------------------------------------------------------------
+// here I'm assuming that the first sample read is always #1
+//-----------------------------------------------------------------------------
       TObjString* os = (TObjString*) words.At(nw-3);
       fScopeEvent.fNSamples  = strtol(os->String().Data(),nullptr,10);
       
@@ -519,6 +526,27 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
     }
   }
   gSystem->ClosePipe(pipe);
+
+
+  tm     begin_run_tm   ; // , end_run_tm;
+  time_t begin_run_epoch; // , end_run_epoch;
+
+  //  char buf[100];
+
+  strncpy(buf,fScopeEvent.fRunStartTime.Data(),20);
+  buf[19] = 0;
+
+  strptime(buf,"%Y-%h-%d %H:%M:%S",&begin_run_tm);
+  begin_run_epoch = mktime(&begin_run_tm);
+
+  // strncpy(buf,fScopeEvent.fRunEndTime.Data()+16,20);
+  // buf[19] = 0;
+
+  // strptime(buf,"%Y-%h-%d %H:%M:%S",&end_run_tm);
+  // end_run_epoch = mktime(&end_run_tm);
+
+  time_t prev_epoch = begin_run_epoch;
+  int    prev_usec  = 0;
   
   for (int i=0; i<TScopeEvent::kMaxNChannels; i++) fScopeEvent.fChannelID[i] = -1;
   
@@ -528,7 +556,7 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 //-----------------------------------------------------------------------------
 // read the data -2 channels
 //-----------------------------------------------------------------------------
-  int       nlines(0), ichannel(0);
+  int       nlines(0), ichannel(0), nblocks(0);
   TObjArray data;
   TObjArray words;
 
@@ -561,14 +589,15 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
       TObjArray w2;
 
       fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
-
+//-----------------------------------------------------------------------------
+// here I'm assuming that the first sample read is always #1
+//-----------------------------------------------------------------------------
       TObjString* os = (TObjString*) words.At(nw-3);
       fScopeEvent.fNSamples  = strtol(os->String().Data(),nullptr,10);
       
       continue;   // number of channels is defined at run-time
     }
-    
-    //    if (s.Index("WFMOutpre:CH1:") == 0) {
+
     if (s.Index("WFMOutpre:") == 0) {
 
       Parse(&s,';',&words);
@@ -608,55 +637,127 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 
     if (s.Length() == 0) continue;
 
-    if (s.Index("trigger") == 0) {
+    if (s.Index(">>>Num_Frames:") == 0) {
+//-----------------------------------------------------------------------------
+// line '>>>Num_Frames: 20'
+//-----------------------------------------------------------------------------
+      sscanf(s.Data(),">>>Num_Frames: %i",&fNFrames);
+//-----------------------------------------------------------------------------
+// read fNFrames timestamps
+//-----------------------------------------------------------------------------
+      int    evt;
+
+      std::vector<int>     usec, psec, dt;
+      std::vector<time_t>  epoch;
+
+      char   day[10], month[10], year[10], time_of_day[10],dot[10];
+
       TObjArray w;
-      Parse(&s,' ',&w);
-      TObjString* os = (TObjString*) w.At(2);
-      fScopeEvent.fEventNumber = strtol(os->String().Data(),nullptr,10)+1;
+
+      for (int i=0; i<fNFrames; i++) {
+	int  tt0,tt1, tt2, tt3;
+
+	int nb = getline(&lineptr,(size_t*) &buflen,f);
+	
+	if (fDebugMode != 0) {
+	  printf(" read nb =%i bytes: %s\n",nb,lineptr);
+	}
+	sscanf(lineptr,"%i: %s %s %s %8s.%3s %3i %3i %3i",&evt,day,month,year,time_of_day,dot,&tt1,&tt2,&tt3);
+	tt0 = atoi(dot);
 //-----------------------------------------------------------------------------
-// multiple events in one file, read one event, 20 numbers per line
+// save microseconds and picoseconds, convert tm struct into a unix time
 //-----------------------------------------------------------------------------
-      for (int ich=0; ich<fScopeEvent.fNChannels; ich++) {
-	int loc = 0;
-	TObjArray numbers;
-	while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
-	  TString line = lineptr;
-	  line = line.Strip(TString::kTrailing,'\n');
-	  line = line.Strip(TString::kTrailing,'\r');
-	  line = line.Strip(TString::kTrailing,' ');
-	  line = line.Strip(TString::kTrailing,',');
-	  int nw = Parse(&line,',',&numbers);
-	  for (int i=0; i<nw; i++) {
-	    const char* num = ((TObjString*) numbers.At(i))->String().Data();
-	    int val = strtol(num,nullptr,10);
-	    fScopeEvent.fV[ich][loc] = (val-fScopeEvent.fVOff[ich])*fScopeEvent.fVSlp[ich] + fScopeEvent.fVOff2[ich];
-	    loc++;
-	  }
-					// next line
-	  if (loc >= fScopeEvent.fNSamples) break;
+	usec.push_back(1000*tt0+tt1);
+	psec.push_back(1000*tt2+tt2);
+
+	char tmm[100];
+	sprintf(tmm,"%s-%s-%s %s",year,month,day,time_of_day);
+
+	struct tm  tm;
+	//	memset(&tm,0,sizeof(tm));
+	strptime(tmm,"%Y-%h-%d %H:%M:%S",&tm);
+	// tm.tm_year += 1900;
+	// tm.tm_mon  += 1;
+
+	time_t ep = mktime(&tm);
+
+	epoch.push_back(ep);
+
+	int delta_t;                  // in microseconds
+	if (i == 0) delta_t = 0;
+	else {
+	  delta_t = (epoch[i]-prev_epoch)*1000000+(usec[i]-prev_usec);
+	}
+
+	dt.push_back(delta_t);
+
+	prev_epoch = epoch[i];
+	prev_usec  = usec [i];
+
+	if (fDebugMode != 0) {
+	  printf(" time: =%li %s tt0 = %i\n",ep, ctime(&ep),tt0);
 	}
       }
 //-----------------------------------------------------------------------------
-// initialize times
+// after frame times, we have fNFrames frames
 //-----------------------------------------------------------------------------
-      for (int i=0; i<fScopeEvent.fNSamples; i++) {
-	fScopeEvent.fT[i] = fScopeEvent.fSampleTime*(i+0.5);
+      prev_epoch = begin_run_epoch;
+      prev_usec  = 0;
+
+      for (int frame=0; frame<fNFrames; frame++) {
+	fScopeEvent.fEventNumber = nblocks*fNFrames+frame+1;
+//-----------------------------------------------------------------------------
+// multiple events in one file, read one event, 20 numbers per line
+//-----------------------------------------------------------------------------
+	for (int ich=0; ich<fScopeEvent.fNChannels; ich++) {
+	  int loc = 0;
+	  TObjArray numbers;
+	  while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
+	    TString line = lineptr;
+	    line = line.Strip(TString::kTrailing,'\n');
+	    line = line.Strip(TString::kTrailing,'\r');
+	    line = line.Strip(TString::kTrailing,' ');
+	    line = line.Strip(TString::kTrailing,',');
+	    int nw = Parse(&line,',',&numbers);
+	    for (int i=0; i<nw; i++) {
+	      const char* num = ((TObjString*) numbers.At(i))->String().Data();
+	      int val = strtol(num,nullptr,10);
+	      fScopeEvent.fV[ich][loc] = (val-fScopeEvent.fVOff[ich])*fScopeEvent.fVSlp[ich] + fScopeEvent.fVOff2[ich];
+	      loc++;
+	    }
+					// next line
+	    if (loc >= fScopeEvent.fNSamples) break;
+	  }
+	}
+//-----------------------------------------------------------------------------
+// initialize the sample times
+//-----------------------------------------------------------------------------
+	for (int i=0; i<fScopeEvent.fNSamples; i++) {
+	  fScopeEvent.fT[i] = fScopeEvent.fSampleTime*(i+0.5);
+	}
+
+	fScopeEvent.fEpoch  = epoch[frame];
+	fScopeEvent.fUSec   = usec[frame ];
+	fScopeEvent.fPSec   = psec[frame ];
+	fScopeEvent.fDeltaT = (epoch[frame]-prev_epoch)+(usec[frame]-prev_usec)/1e6;
+
+//-----------------------------------------------------------------------------
+// data read in, save in an NTuple
+//-----------------------------------------------------------------------------
+	fEvent->Init(fAbsEvent,0);
+	fTree->Fill();
+
+	prev_epoch = epoch[frame];
+	prev_usec  = usec [frame];
+
+	nevents++;
+	nlines++;
       }
-//-----------------------------------------------------------------------------
-// all event data read in,
-//-----------------------------------------------------------------------------
     }
-
-    nlines++;
-    //    printf("line: %5i nwords: %5i\n", nlines,nwords);
 //-----------------------------------------------------------------------------
-// data read in
-// now need to save as an NTuple
+// end of the >>>Num_Frames: block, increment number of blocks
 //-----------------------------------------------------------------------------
-    fEvent->Init(fAbsEvent,0);
-    fTree->Fill();
-
-    nevents++;
+    nblocks += 1;
   }
 
   printf(" --- finish after processing: %i events\n",nevents);

@@ -29,6 +29,10 @@ struct TScopeEvent {
   float    fTriggerTime;
   TString  fRunStartTime;
   TString  fRunEndTime;
+  int      fUSec;
+  int      fEpoch;
+  int      fPSec;
+  float    fDeltaT;
   
   float    fT[5000];			// this is a shortcut...
   float    fV[kMaxNChannels][5000];		//

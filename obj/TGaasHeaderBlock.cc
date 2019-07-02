@@ -13,7 +13,7 @@
 ClassImp(TGaasHeaderBlock)
 
 //-----------------------------------------------------------------------------
-void TStnHeaderBlock::ReadV1(TBuffer &R__b) {
+void TGaasHeaderBlock::ReadV1(TBuffer &R__b) {
   TStnHeaderBlock::Streamer(R__b);
 
   fRunStartTime = "default";
@@ -21,7 +21,7 @@ void TStnHeaderBlock::ReadV1(TBuffer &R__b) {
 }
 
 //-----------------------------------------------------------------------------
-void TStnHeaderBlock::ReadV2(TBuffer &R__b) {
+void TGaasHeaderBlock::ReadV2(TBuffer &R__b) {
   TStnHeaderBlock::Streamer(R__b);
   R__b >> fRunStartTime;
   R__b >> fRunEndTime;
@@ -40,9 +40,10 @@ void TGaasHeaderBlock::Streamer(TBuffer &R__b)
       TStnHeaderBlock::Streamer(R__b);
       R__b >> fRunStartTime;
       R__b >> fRunEndTime;
-      R__b >> fTime;
-      R__b >> fTime1;
-      R__b >> fTime2;
+      R__b >> fEpoch;
+      R__b >> fUSec;
+      R__b >> fPSec;
+      R__b >> fDeltaT;
     }
   }
   else {
@@ -50,9 +51,10 @@ void TGaasHeaderBlock::Streamer(TBuffer &R__b)
     TStnHeaderBlock::Streamer(R__b);
     R__b << fRunStartTime;
     R__b << fRunEndTime;
-    R__b << fTime;
-    R__b << fTime1;
-    R__b << fTime2;
+    R__b << fEpoch;
+    R__b << fUSec;
+    R__b << fPSec;
+    R__b << fDeltaT;
   }
 }
 
