@@ -3,6 +3,8 @@
 // scope data could have different formats, make format a parameter
 // 
 // need to revise the data buffer dimensions for new files
+// ReadGaasData: single frame mode
+// ReadGaasDataNew: single frame mode
 ///////////////////////////////////////////////////////////////////////////////
 #include <vector>
 #include <time.h>
@@ -12,12 +14,13 @@
 // ClassImp(TConvertTekData)
 //-----------------------------------------------------------------------------
 TConvertTekData::TConvertTekData() {
-  fEvent     = nullptr;
-  fFile      = nullptr;
-  fFileName  = "";
-  fDirName   = "";
-  fDebugMode = 0;
-  fNFrames   = -1;
+  fEvent         = nullptr;
+  fFile          = nullptr;
+  fFileName      = "";
+  fDirName       = "";
+  fDebugMode     = 0;
+  fReadoutMode   = -1;
+  fNFrames       = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -295,6 +298,14 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
     if (s.Index("DATA:"     ) == 0) {
 
       int nw = Parse(&s,';',&words);
+
+      TObjString* os1 = (TObjString*) words.At(1);
+      if (os1->String() == "FASTEST") {
+	fReadoutMode = 1;                      // FastFrame
+      }
+      else {
+	fReadoutMode = 0;                      // single frame readout
+      }
 
       TObjString* os2 = (TObjString*) words.At(2);
       TObjArray w2;

@@ -49,7 +49,8 @@ class TConvertTekData: public TObject {
   AbsEvent*    fAbsEvent;
 
   TScopeEvent  fScopeEvent;
-  int          fNFrames;    // number of frames read in one I/O transaction (TeK FastFrame mode)
+  int          fReadoutMode;            // single frame (0) or FastFrame (1)
+  int          fNFrames;                // N(frames) read in one I/O transaction (TeK FastFrame mode)
   int          fDebugMode;
 //-----------------------------------------------------------------------------
 // functions
