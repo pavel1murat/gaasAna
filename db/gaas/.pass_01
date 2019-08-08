@@ -24,4 +24,18 @@ readout_map        92        96      readout_map.15
 readout_map        97       102      readout_map.16
 readout_map       103       104      readout_map.17
 readout_map       105       106      readout_map.18
+readout_map       107       110      readout_map.19
+readout_map       111       123      readout_map.20
+readout_map       124       136      readout_map.21
+readout_map       137       138      readout_map.22
+readout_map       139       150      readout_map.23
+readout_map       151       157      readout_map.24
+readout_map       158       163      readout_map.25
+readout_map       164       164      readout_map.26
+readout_map       165       167      readout_map.27
+readout_map       168       172      readout_map.28
+readout_map       173       173      readout_map.0173
+readout_map	  174	    174	     readout_map.0174
+readout_map       186       186      readout_map.0186
+readout_map	  187	    187	     readout_map.0187
 #-----------------------------------------------------------------------
