@@ -679,13 +679,13 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 // save microseconds and picoseconds, convert tm struct into a unix time
 //-----------------------------------------------------------------------------
 	usec.push_back(1000*tt0+tt1);
-	psec.push_back(1000*tt2+tt2);
+	psec.push_back(1000*tt2+tt3);
 
 	char tmm[100];
 	sprintf(tmm,"%s-%s-%s %s",year,month,day,time_of_day);
 
 	struct tm  tm;
-	//	memset(&tm,0,sizeof(tm));
+	memset(&tm,0,sizeof(tm));
 	strptime(tmm,"%Y-%h-%d %H:%M:%S",&tm);
 	// tm.tm_year += 1900;
 	// tm.tm_mon  += 1;
@@ -750,7 +750,7 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 	fScopeEvent.fEpoch  = epoch[frame];
 	fScopeEvent.fUSec   = usec[frame ];
 	fScopeEvent.fPSec   = psec[frame ];
-	fScopeEvent.fDeltaT = (epoch[frame]-prev_epoch)+(usec[frame]-prev_usec)/1e6;
+	fScopeEvent.fDeltaT = dt[frame]/1.e3;  // in milliseconds
 
 //-----------------------------------------------------------------------------
 // data read in, save in an NTuple
