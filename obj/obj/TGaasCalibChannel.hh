@@ -17,9 +17,10 @@ public:
   int             fMaxSample[2]  ;
   float           fMaxP2P        ;	// to filter out the signal
   float           fMaxThr        ;
-  int             fS1            ;
+  float           fMinQ          ;
   int             fPulseIntWindow; 
   float           fGain          ;
+  float           fMinWidth      ;     // min width of a type#2 pulse
 
   TGaasCalibChannel() {}
   ~TGaasCalibChannel() {}
@@ -28,6 +29,9 @@ public:
   int Used    () { return fUsed;     }
   int NSamples() { return fNSamples; }
   int Polarity() { return fPolarity; }
+
+  float MinQ    () const { return fMinQ;     }
+  float MinWidth() const { return fMinWidth; }
 
   ClassDef(TGaasCalibChannel,1)
 };

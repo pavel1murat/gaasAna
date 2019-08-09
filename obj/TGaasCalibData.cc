@@ -48,8 +48,8 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
     return -2;
   }
 
-  int     ich, used, polarity, ns, min_s0, max_s0, min_s1, max_s1, s1, win ;
-  float   max_p2p, max_thr, gain;
+  int     ich, used, polarity, ns, min_s0, max_s0, min_s1, max_s1, win ;
+  float   max_p2p, max_thr, gain, min_q, min_width;
 
   fNChannels = 0;
   
@@ -68,9 +68,10 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
       fscanf(f,"%i" ,&max_s1   );
       fscanf(f,"%f" ,&max_p2p  );
       fscanf(f,"%f" ,&max_thr  );
-      fscanf(f,"%i" ,&s1       );
+      fscanf(f,"%f" ,&min_q    );
       fscanf(f,"%i" ,&win      );
       fscanf(f,"%f" ,&gain     );
+      fscanf(f,"%f" ,&min_width);
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
@@ -84,9 +85,10 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
       fChannel[fNChannels].fMaxSample[1]   = max_s1;
       fChannel[fNChannels].fMaxP2P         = max_p2p;
       fChannel[fNChannels].fMaxThr         = max_thr;
-      fChannel[fNChannels].fS1             = s1;
+      fChannel[fNChannels].fMinQ           = min_q;
       fChannel[fNChannels].fPulseIntWindow = win;
       fChannel[fNChannels].fGain           = gain;
+      fChannel[fNChannels].fMinWidth       = min_width;
       
       fNChannels++;
     }

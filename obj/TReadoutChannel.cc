@@ -65,6 +65,7 @@ void TReadoutChannel::SetNSamples(int N) {
   fT .reserve(N);
   fV0.reserve(N);
   fV1.reserve(N);
+  fV2.reserve(N);
 }
 
 //-----------------------------------------------------------------------------
