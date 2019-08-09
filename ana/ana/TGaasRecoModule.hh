@@ -44,11 +44,13 @@ public:
     TH1F*   fNSamples;			// 
 					// so far, assume one channel
     TH2F*   fWaveform[2]  ;
+    TH2F*   fWf2          ;
     TH1F*   fLastWaveform ;
     TH1F*   fQ[2];			// charge
     TH1F*   fQ1[2];			// charge, corrected
     TH1F*   fV0Max[2];			// max ampl, raw
     TH1F*   fV1Max[2];			// max ampl, baseline subtracted
+    TH1F*   fV2Max;			// max ampl/gain, baseline subtracted
     TH1F*   fT0;			// T0
     TH1F*   fPedestal[2];
     TH1F*   fSigmaPed[2];
@@ -95,7 +97,7 @@ public:
   // float              fGain;
 
   int                fPolarity;   // signal polarity, comes from calib db
-  float              fV1Max[2];   // thresholds for separating two types of pulses
+  float              fV2Max[2];   // thresholds for separating two types of pulses
 
   TReadoutChannel*   fChannel[kMaxNChannels];
 //-----------------------------------------------------------------------------
@@ -113,7 +115,7 @@ public:
 // modifiers
 //-----------------------------------------------------------------------------
   void    SetFillHistograms(int Fill) { fFillHistograms = Fill; }
-  void    SetV1Max(float V0, float V1) { fV1Max[0] = V0; fV1Max[1] = V1; }
+  void    SetV2Max(float V0, float V1) { fV2Max[0] = V0; fV2Max[1] = V1; }
 //-----------------------------------------------------------------------------
 // overloaded methods of TStnModule
 //-----------------------------------------------------------------------------
@@ -134,6 +136,8 @@ public:
   void    FillHistograms();
 
   int     ProcessChannels();
+
+  int     GoodPulse         (TReadoutChannel* Channel, TGaasCalibChannel* Calib);
   int     ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChannel* Calib);
 
   void    Debug();

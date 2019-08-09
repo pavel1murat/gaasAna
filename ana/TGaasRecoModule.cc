@@ -48,8 +48,8 @@ TGaasRecoModule::TGaasRecoModule(const char* name, const char* title): TStnModul
   TClass* cl      = gROOT->GetClass("TGaasCalibData");
   fCalibData      = (TGaasCalibData*) cl->New();
 
-  fV1Max[0]       = 3. ; // apparently, mV
-  fV1Max[1]       = 8. ; // apparently, mV
+  fV2Max[0]       = 0.7; // apparently, mV on input
+  fV2Max[1]       = 1.5; // apparently, mV on input
 }
 
 //-----------------------------------------------------------------------------
@@ -94,22 +94,24 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
   int ns = fCalibData->GetChannel(Hist->fChannelID)->NSamples();
 
   HBook1F(Hist->fNSamples    ,"nsamples","nsamples",100      ,  0,  1000, Folder);
-  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]", ns      ,  0,   ns,  1000, -50,  50,Folder);
+  HBook2F(Hist->fWaveform[0] ,"wf_0"    ,"wf_0[mV]", ns      ,  0,   ns,  4000, -200,  200,Folder);
   HBook2F(Hist->fWaveform[1] ,"wf_1"    ,"wf_1[mV]", ns      ,  0,   ns,  5000,-2000, 8000,Folder);
+  HBook2F(Hist->fWf2         ,"wf2"     ,"wf2[mV]" , ns      ,  0,   ns,  1000, -1,      4,Folder);
   HBook1F(Hist->fLastWaveform,"last_wf" ,"last_wf" , ns      ,  0,   ns,  Folder);
   HBook1F(Hist->fQ[0]        ,"q_0"     ,"Q_0"     ,1000     ,  0,  500,  Folder);
-  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0,200000, Folder);
+  HBook1F(Hist->fQ[1]        ,"q_1"     ,"Q_1"     ,1000     ,  0, 5000, Folder);
   HBook1F(Hist->fQ1[0]       ,"q1_0"    ,"Q1_0"    ,1000     ,  0,   50,  Folder);
   HBook1F(Hist->fQ1[1]       ,"q1_1"    ,"Q1_1"    ,1000     ,  0,   50,  Folder);
   HBook1F(Hist->fV0Max[0]    ,"v0max_0" ,"V0Max[0]",500      ,  0,  250,  Folder);
   HBook1F(Hist->fV0Max[1]    ,"v0max_1" ,"V0Max[1]",200      ,  0,10000,  Folder);
   HBook1F(Hist->fV1Max[0]    ,"v1max_0" ,"V1Max[0]",500      ,  0,  250,  Folder);
   HBook1F(Hist->fV1Max[1]    ,"v1max_1" ,"V1Max[1]",200      ,  0,10000,  Folder);
+  HBook1F(Hist->fV2Max       ,"v2max"   ,"V2Max"   ,500      ,  0,    5,  Folder);
   HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,150,  350,  Folder);
   HBook1F(Hist->fLeSlope     ,"le_slope","LE slope",500      ,  0,  0.5,  Folder);
   HBook1F(Hist->fTeSlope     ,"te_slope","TE slope",200      , -0.2,  0,  Folder);
-  HBook1F(Hist->fWidth       ,"width"   ,"Width"   ,500      ,  0,  500,  Folder);
-  HBook2F(Hist->fW_v_H       ,"w_v_h"   ,"W_v_H"   ,ns       ,  0, 1500,  50,0, 50,Folder);
+  HBook1F(Hist->fWidth       ,"width"   ,"Width"   ,100      ,  0,  100,  Folder);
+  HBook2F(Hist->fW_v_H       ,"w_v_v2"  ,"W_v_V2"  ,1000     ,  0,    2, 100,0,100,Folder);
   HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,500      ,-1e-3,1e-3, Folder);
   HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,500      ,-25,   25,  Folder);
   HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",200      ,  0,    2,  Folder);
@@ -171,9 +173,9 @@ void TGaasRecoModule::BookHistograms() {
       channel_selection[     i] = new TString("all channels");
       channel_selection[ 100+i] = new TString("P2P < 0.0040");                 // peak to peak
       channel_selection[ 200+i] = new TString("P2P >= 0.0040");                // peak to peak
-      channel_selection[ 300+i] = new TString("Q < fV1Max");                   // charge
-      channel_selection[ 400+i] = new TString("fV1Max[0] <= Q < fV1Max[1]");   // charge
-      channel_selection[ 500+i] = new TString("Q >= fV1Max[1]");               // charge
+      channel_selection[ 300+i] = new TString("Q < fV2Max");                   // charge
+      channel_selection[ 400+i] = new TString("fV2Max[0] <= Q < fV2Max[1]");   // charge
+      channel_selection[ 500+i] = new TString("Q >= fV2Max[1]");               // charge
       channel_selection[ 600+i] = new TString("LeSlope < 0.03" );              // leading slope
       channel_selection[ 700+i] = new TString("0.03 <= LeSlope < 0.09" );      // leading slope
       channel_selection[ 800+i] = new TString("LeSlope >= 0.09" );             // leading slope
@@ -245,6 +247,7 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
   Hist->fV0Max[1]->Fill(Channel->V0Max());
   Hist->fV1Max[0]->Fill(Channel->V1Max());
   Hist->fV1Max[1]->Fill(Channel->V1Max());
+  Hist->fV2Max->Fill(Channel->V2Max());
 					// N(points) >> 1, do not correct for that
   
   float sig_ped = sqrt(Channel->Chi2Ped());
@@ -271,14 +274,33 @@ void TGaasRecoModule::FillChannelHistograms(HistBase_t* HistR, TReadoutChannel* 
     int   x = i+0.5;
     Hist->fWaveform[0]    ->Fill(x,v);
     Hist->fWaveform[1]    ->Fill(x,v);
+    Hist->fWf2            ->Fill(x,Channel->V2(i));
     Hist->fLastWaveform->SetBinContent(i+1,v);
     Hist->fLastWaveform->SetBinError  (i+1,0);
   }
-  Hist->fW_v_H->Fill(Channel->V1Max(),Channel->Width());
+  Hist->fW_v_H->Fill(Channel->V2Max(),Channel->Width());
 
 }
 
 
+//-----------------------------------------------------------------------------
+// returns 1 for good pulse
+//-----------------------------------------------------------------------------
+int TGaasRecoModule::GoodPulse(TReadoutChannel* Ch, TGaasCalibChannel* Calib) {
+  int ok(0);
+
+  float p2p_1 = Ch->fPar[1]-Ch->fPar[0];
+  float p2p_2 = Ch->fPar[3]-Ch->fPar[2];
+    
+  if ((p2p_1                <  Calib->fMaxP2P) && 
+      (p2p_2                <  Calib->fMaxP2P) && 
+      (fabs(Ch->Pedestal()) <  Calib->fMaxThr) && 
+      (Ch->Q1()             >= Calib->MinQ() )    ) {
+    ok = 1;
+  }
+
+  return ok;
+}
 
 //_____________________________________________________________________________
 
@@ -305,25 +327,37 @@ void TGaasRecoModule::FillHistograms() {
     
     FillChannelHistograms(fHist.fChannel[cid], ch);
       
-    float p2p_1 = ch->fPar[1]-ch->fPar[0];
-    float p2p_2 = ch->fPar[3]-ch->fPar[2];
-    
-    if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
-      FillChannelHistograms(fHist.fChannel[100+cid], ch);
-    }
-    else {
-      FillChannelHistograms(fHist.fChannel[200+cid], ch);
-    }
+    int good_pulse = GoodPulse(ch,cch);
 
-    float v1max = ch->V1Max();
+    if (good_pulse) FillChannelHistograms(fHist.fChannel[100+cid], ch);
+    else            FillChannelHistograms(fHist.fChannel[200+cid], ch);
+
+    float v2max = ch->V2Max();
+    float width = ch->Width();
     
-    if ((p2p_1 < cch->fMaxP2P) && (p2p_2 < cch->fMaxP2P) && (fabs(ch->Pedestal()) < cch->fMaxThr)) {
-      if      (v1max  <  fV1Max[0]) FillChannelHistograms(fHist.fChannel[300+cid], ch);
-      else if ((v1max >= fV1Max[0]) && (v1max < fV1Max[1])) {
-	FillChannelHistograms(fHist.fChannel[400+cid], ch);
-	if (GetDebugBit(4) == 1) GetHeaderBlock()->Print("look at the VMax event");
+    if (good_pulse) {
+//-----------------------------------------------------------------------------
+// determine pulse type:
+// wide pulses: type = 1. narrow ones: type=2
+// if width is not analyzed, small pulses are type = 1; higher ones : type=2
+//                           type=3: very large pulses
+//-----------------------------------------------------------------------------
+      int pulse_type(-1);
+
+      if (cch->MinWidth() > 0) {
+	if (width >= cch->MinWidth()) pulse_type = 1;
+	else                          pulse_type = 2;
       }
-      else if ( v1max >= fV1Max[1]) FillChannelHistograms(fHist.fChannel[500+cid], ch);
+      else {
+	if      (v2max  <  fV2Max[0])                           pulse_type = 1;
+	else if ((v2max >= fV2Max[0]) && (v2max < fV2Max[1]))   pulse_type = 2;
+	else if (v2max  >= fV2Max[1])                           pulse_type = 3;
+      }
+
+
+      if      (pulse_type == 1) FillChannelHistograms(fHist.fChannel[300+cid], ch);
+      else if (pulse_type == 2) FillChannelHistograms(fHist.fChannel[400+cid], ch);
+      else if (pulse_type == 3) FillChannelHistograms(fHist.fChannel[500+cid], ch);
 //-----------------------------------------------------------------------------
 // look at the waveforms with different LE slopes
 //-----------------------------------------------------------------------------
@@ -501,6 +535,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
     }
 					// v1 - baseline subtracted, positive
     Channel->SetV1(i,v);
+    Channel->SetV2(i,v/Calib->fGain);
   }
 //-----------------------------------------------------------------------------
 // try to determine the waveform T0
@@ -590,6 +625,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
   Channel->SetI0Max(c0max);
 
   Channel->SetV1Max(vmax);
+  Channel->SetV2Max(vmax/Calib->fGain);
   Channel->SetI1Max(cmax);
 //-----------------------------------------------------------------------------
 // fill histograms
@@ -647,14 +683,16 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
 // integrate charge (for non-trigger pulses)
 // poor-man's calib DB
 //-----------------------------------------------------------------------------
-//  min_cell = (int) (t0-10);
-//  min_cell = Calib->fS1;
   min_cell = t0;
   if (min_cell < 0) min_cell = 0;
 
-  //  max_cell = (int) (t0+Calib->fPulseIntWindow);
+//-----------------------------------------------------------------------------
+// if Calib->fPulseIntWindow > 0, use fixed length integration window, 
+// otherwise integrate till the waveform crosses zero
+//-----------------------------------------------------------------------------
+  if (Calib->fPulseIntWindow > 0) max_cell = (int) (t0+Calib->fPulseIntWindow);
+  else                            max_cell = t1;
 
-  max_cell = t1;
   if (max_cell > ns) max_cell=ns;
 
   q = 0;
