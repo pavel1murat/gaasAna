@@ -107,7 +107,7 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
   HBook1F(Hist->fV1Max[0]    ,"v1max_0" ,"V1Max[0]",500      ,  0,  250,  Folder);
   HBook1F(Hist->fV1Max[1]    ,"v1max_1" ,"V1Max[1]",200      ,  0,10000,  Folder);
   HBook1F(Hist->fV2Max       ,"v2max"   ,"V2Max"   ,500      ,  0,    5,  Folder);
-  HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,150,  350,  Folder);
+  HBook1F(Hist->fT0          ,"t0"      ,"T0"      ,400      ,100,  300,  Folder);
   HBook1F(Hist->fLeSlope     ,"le_slope","LE slope",500      ,  0,  0.5,  Folder);
   HBook1F(Hist->fTeSlope     ,"te_slope","TE slope",200      , -0.2,  0,  Folder);
   HBook1F(Hist->fWidth       ,"width"   ,"Width"   ,100      ,  0,  100,  Folder);
