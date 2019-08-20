@@ -151,7 +151,8 @@ void TGaasSpmcAnaModule::BookHistograms() {
   int book_spmc_histset[kNStepPointMCHistSets];
   for (int i=0; i<kNStepPointMCHistSets; i++) book_spmc_histset[i] = 0;
 
-  book_spmc_histset[0] = 1;		// all steps
+  book_spmc_histset[   0] = 1;		// all steps
+  book_spmc_histset[1002] = 1;		// steps in D2
 
   for (int i=0; i<kNStepPointMCHistSets; i++) {
     if (book_spmc_histset[i] != 0) {
@@ -304,6 +305,7 @@ void TGaasSpmcAnaModule::FillHistograms() {
 
   for (int i=0; i<nsteps; i++) {
     spmc         = fSpmcBlock->StepPointMC(i);
+    int vol_id   = spmc->VolumeID();
     //    float p      = spmc->Mom()->Mag();
     //    float t      = spmc->Time();
     int pdg_code = spmc->PDGCode();
@@ -320,6 +322,8 @@ void TGaasSpmcAnaModule::FillHistograms() {
     }
 
     FillSpmcHistograms(fHist.fStepPointMC[0],spmc,&spmc_data);
+
+    if (vol_id == 1002) FillSpmcHistograms(fHist.fStepPointMC[1002],spmc,&spmc_data);
   }
 
 //-----------------------------------------------------------------------------

@@ -697,17 +697,15 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
 
   q = 0;
   for (int cell=min_cell; cell<max_cell; cell++) {
-    v = Channel->V1(cell);
-    q += v;
+    float v1 = Channel->V1(cell);
+    q += v1;
   }
 //-----------------------------------------------------------------------------
-// account for calibrations and convert into picocoulombs
+// account for calibrations and convert into mV on input of the first amplifier
+// (not yet picocoulombs
 //-----------------------------------------------------------------------------
-  float _QScale ( 1.);
-  
-  q  = q/_QScale;
   Channel->SetQ(q);
-				// "charge" converted to input  
+				// "charge" converted to "mV on input"
   q1 = q/Calib->fGain;
   Channel->SetQ1(q1);
 
