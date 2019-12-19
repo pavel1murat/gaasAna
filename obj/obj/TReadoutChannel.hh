@@ -37,6 +37,7 @@ public:
   float          fLeSlope;
   float          fTeSlope;
   float          fWidth;
+  float          fSamplingTime;         // cached
 
   struct Hist_t {
     TH1F*        fV0;
@@ -81,6 +82,7 @@ public:
   float           Chi2Ped () { return fChi2Ped;  }
   int             NptPed  () { return fNptPed;   }
   float           Pedestal() { return fPedestal; }
+  float           SamplingTime() { return fSamplingTime; }
 //-----------------------------------------------------------------------------
 // setters
 //-----------------------------------------------------------------------------
@@ -104,6 +106,8 @@ public:
   void SetI1Max    (int   I) { fI1Max    = I; }
 
   void SetNSamples(int NSamples);
+
+  void SetSamplingTime(float Dt) { fSamplingTime = Dt; }
   
 //-----------------------------------------------------------------------------
 // overloaded methods of TObject

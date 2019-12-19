@@ -6,11 +6,9 @@
 // fStop =  4: exited through Y side - no internal reflection
 // fStop =  5: exited through the Z top side    - no internal reflection
 // fStop =  6: exited through the Z bottom size - no internal reflection
-// fStop = 10: too many reflections
-// fStop = 13: exited through X side - diffused reflection
-// fStop = 14: exited through Y side - diffused reflection
-// fStop = 15: exited through Z top  - diffused reflection
-// fStop = 16: exited through Z bottom  - diffused reflection
+// fStop =  9: too many reflections
+// fStop = 10+iplane: exited through iplane - because the angle too small and no internal reflection
+// fStop = 20+iplane: exited through iplane - diffuse reflection
 //////////////////////////////////////////////////////////////////////////////
 
 #include "TMath.h"
@@ -20,80 +18,18 @@
 
 ClassImp(GaasqdQuickSim)
 //-----------------------------------------------------------------------------
-GaasqdQuickSim::GaasqdQuickSim(double DiodeDx, double DiodeDy): TNamed() {
+// a separate script is required to initialize geometry
+//-----------------------------------------------------------------------------
+GaasqdQuickSim::GaasqdQuickSim(): TNamed() {
 
-  fSensorDx   = 0.2500;
-  fSensorDy   = 0.0350;
-  fSensorDz   = 0.00125;
-					// dimensions for the test
-  //  fDiodeDx    = 0.0025;			// N1816-PCBGBAC-E2 : 300x50 um
-  fDiodeDx    = DiodeDx;                 
-  fDiodeDy    = DiodeDy;                 
-  fDiodeDz    = fSensorDz;		// just to make the diode visible, thickness is not used so far
-
-					// nominally, -0.225
-  fDiodeDispX = -0.225; // 0.;
 					// N(e-h pairs) 
-  fYield      = 1000.;			// 250000;    // per MeV
-					// by default, fixed plane
-  fPosMode    = 0;
-
-  fBottomMirror = 0;
-
-  fGeoManager = new TGeoManager("gm", "gm");
-  TGeoElementTable *table = fGeoManager->GetElementTable();
+				// by default, fixed X,Y
+  fPosMode      = 0;
 //-----------------------------------------------------------------------------
-// just for fun, follow ROOT rules
+// geometry is not initialized in the constructor,
+// a separate call to InitGeometry is required
 //-----------------------------------------------------------------------------
-  TGeoMixture *air = new TGeoMixture("air",4, 0.00120479);
-  air->AddElement(table->FindElement("C" ),0.000124);
-  air->AddElement(table->FindElement("N" ),0.755268);
-  air->AddElement(table->FindElement("O" ),0.231781);
-  air->AddElement(table->FindElement("AR"),0.012827);
-  
-  TGeoMedium   *med = new TGeoMedium  ("AIR",1,air);
-
-  TGeoVolume   *top = fGeoManager->MakeBox("TOP",med,1,1,1);
-  fGeoManager->SetTopVolume(top);
-//-----------------------------------------------------------------------------
-// describe the GaAs sensor
-//-----------------------------------------------------------------------------
-  TGeoMixture *gaas = new TGeoMixture("gaas",2, 5.32);
-  gaas->AddElement(table->FindElement ("GA"),1);
-  gaas->AddElement(table->FindElement ("AS"),1);
-
-  TGeoMedium*  m_gaas = new TGeoMedium  ("GAAS",2,gaas);
-
-  fCrystal   = fGeoManager->MakeBox("gaas_sensor",m_gaas,fSensorDx,fSensorDy,fSensorDz);
-  fCrystal->SetTransparency(60);
-  top->AddNode(fCrystal,1);
-//-----------------------------------------------------------------------------
-// add photodiode
-//-----------------------------------------------------------------------------
-  TGeoMixture *ingaas = new TGeoMixture("ingaas",3, 5.32);
-  ingaas->AddElement(table->FindElement ("In"),0.05);
-  ingaas->AddElement(table->FindElement ("GA"),0.45);
-  ingaas->AddElement(table->FindElement ("AS"),0.50);
-
-  TGeoMedium*  m_ingaas = new TGeoMedium  ("INGAAS",3,ingaas);
-  fDiode    = fGeoManager->MakeBox("Diode",m_ingaas, fDiodeDx,fDiodeDy,fDiodeDz);
-  fDiode->SetLineColor(kRed+2);
-  fDiode->SetTransparency(60);
-  
-  top->AddNode(fDiode,2,new TGeoTranslation(fDiodeDispX,0.0000,fDiodeDz+fSensorDz));
-
-  fGeoManager->CloseGeometry();
-
-  TGeoNode* tnode = fGeoManager->GetTopNode();
-
-  fDiodePos = tnode->GetDaughter(1)->GetMatrix()->GetTranslation();
-  
-
-  // top->Draw();
-  //  TView *view = gPad->GetView();
-  // view->ShowAxis();
-  
-  fNPhMean  = fYield; // 13000  LYSO:Ce 26000 photons/MeV
+  fNPhMean         = 1000; // 13000  LYSO:Ce 26000 photons/MeV
 
   fPhotoEff        = 0.25;		// not used so far
   fMaxNReflections = 190;
@@ -104,6 +40,8 @@ GaasqdQuickSim::GaasqdQuickSim(double DiodeDx, double DiodeDy): TNamed() {
 
   fAbsLength       = 2.2;    // 4 mm is too generous
   fReflProb        = 0.974;		// 0.95;
+
+  for (int i=0; i<6; i++) fMirror[i] = 0;
 
   fRn = new TRandom3();
 //-----------------------------------------------------------------------------
@@ -129,9 +67,8 @@ GaasqdQuickSim::GaasqdQuickSim(double DiodeDx, double DiodeDy): TNamed() {
     fHist.fPhoton[i] = 0;
   }
 
-  BookHistograms();
-
   fDebugLevel = 0;
+  fFirstCall  = 1;
 }
 
 
@@ -139,6 +76,83 @@ GaasqdQuickSim::GaasqdQuickSim(double DiodeDx, double DiodeDy): TNamed() {
 GaasqdQuickSim::~GaasqdQuickSim() {
 }
 
+//-----------------------------------------------------------------------------
+// although this part looks generic, only one detector is currently allowed
+//-----------------------------------------------------------------------------
+int GaasqdQuickSim::InitGeometry(double* Sensor, Detector_t* Det, int NDet) {
+  
+  fGeoManager = new TGeoManager("gm", "gm");
+  TGeoElementTable *table = fGeoManager->GetElementTable();
+//-----------------------------------------------------------------------------
+// just for fun, follow ROOT rules
+//-----------------------------------------------------------------------------
+  TGeoMixture *air = new TGeoMixture("air",4, 0.00120479);
+  air->AddElement(table->FindElement("C" ),0.000124);
+  air->AddElement(table->FindElement("N" ),0.755268);
+  air->AddElement(table->FindElement("O" ),0.231781);
+  air->AddElement(table->FindElement("AR"),0.012827);
+  
+  TGeoMedium*  fMedAir = new TGeoMedium  ("AIR",1,air);
+//-----------------------------------------------------------------------------
+// describe the GaAs medium
+//-----------------------------------------------------------------------------
+  TGeoMixture *gaas = new TGeoMixture("gaas",2, 5.32);
+  gaas->AddElement(table->FindElement ("GA"),1);
+  gaas->AddElement(table->FindElement ("AS"),1);
+
+  fMedGaAs = new TGeoMedium  ("GAAS",2,gaas);
+//-----------------------------------------------------------------------------
+// add photodiode medium
+//-----------------------------------------------------------------------------
+  TGeoMixture *ingaas = new TGeoMixture("ingaas",3, 5.32);
+  ingaas->AddElement(table->FindElement ("In"),0.05);
+  ingaas->AddElement(table->FindElement ("GA"),0.45);
+  ingaas->AddElement(table->FindElement ("AS"),0.50);
+
+  fMedInGaAs = new TGeoMedium  ("INGAAS",3,ingaas);
+//-----------------------------------------------------------------------------
+// now create volumes
+//-----------------------------------------------------------------------------
+  TGeoVolume   *top = fGeoManager->MakeBox("TOP",fMedAir,1,1,1);
+  fGeoManager->SetTopVolume(top);
+//-----------------------------------------------------------------------------
+// this is the part which goes into the geometry initialization
+//-----------------------------------------------------------------------------
+  fCrystal   = fGeoManager->MakeBox("gaas_sensor",fMedGaAs,Sensor[0],Sensor[1],Sensor[2]);
+  fCrystal->SetTransparency(60);
+  top->AddNode(fCrystal,1);
+
+  fNDetectors = NDet;
+  
+  char name[100];
+  for (int i=0; i<NDet; i++) {
+    fDetector[i] = new Detector_t(*(Det+i));
+    sprintf(name,"Diode_%02i",i);
+    TGeoVolume* diode = fGeoManager->MakeBox(name,fMedInGaAs,Det->fDx,Det->fDy,Det->fDz);
+    diode->SetLineColor(kRed+2);
+    diode->SetTransparency(20);
+
+    if      (Det->fSide == 0) top->AddNode(diode,1,new TGeoTranslation(-Det->fDx-Sensor[0], Det->fOffsetY     , Det->fOffsetZ     ));
+    else if (Det->fSide == 1) top->AddNode(diode,1,new TGeoTranslation( Det->fDx+Sensor[0], Det->fOffsetY     , Det->fOffsetZ     ));
+    else if (Det->fSide == 2) top->AddNode(diode,1,new TGeoTranslation( Det->fOffsetX     ,-Det->fDy-Sensor[1], Det->fOffsetZ     ));
+    else if (Det->fSide == 3) top->AddNode(diode,1,new TGeoTranslation( Det->fOffsetX     , Det->fDy+Sensor[1], Det->fOffsetZ     ));
+    else if (Det->fSide == 4) top->AddNode(diode,1,new TGeoTranslation( Det->fOffsetX     , Det->fOffsetY     ,-Det->fDz-Sensor[2]));
+    else if (Det->fSide == 5) top->AddNode(diode,1,new TGeoTranslation( Det->fOffsetX     , Det->fOffsetY     , Det->fDz+Sensor[2]));
+  }
+  
+  fGeoManager->CloseGeometry();
+//-----------------------------------------------------------------------------
+//  retrieve the detector position from the geometry manager
+//-----------------------------------------------------------------------------
+  TGeoNode* tnode = fGeoManager->GetTopNode();
+
+  fDiodePos = tnode->GetDaughter(1)->GetMatrix()->GetTranslation();
+
+  // top->Draw();
+  //  TView *view = gPad->GetView();
+  // view->ShowAxis();
+  return 0;
+}
 
 //_____________________________________________________________________________
 void     GaasqdQuickSim::AddHistogram(TObject* hist, const char* FolderName) {
@@ -213,8 +227,9 @@ void GaasqdQuickSim::ResetHistograms(TFolder* Folder, const char* Opt) {
 int GaasqdQuickSim::BookEventHistograms(EventHist_t* Hist, const char* Folder) {
 
   HBook1F(Hist->fNPhotons   ,"nphot" ,Form("%s: nphotons",Folder),1000,0,1.e5,Folder);
-  HBook1F(Hist->fNDetPhotons,"ndphot" ,Form("%s: ndet photons",Folder),1000,0,1.e5,Folder);
-  HBook1F(Hist->fEff        ,"eff" ,Form("%s: eff",Folder),1000,0,1,Folder);
+  HBook1F(Hist->fNDetPhotons,"ndphot",Form("%s: ndet photons",Folder),1000,0,1.e5,Folder);
+  HBook1F(Hist->fEff[0]     ,"eff_0" ,Form("%s: eff[0]",Folder),10001,0,1.0001,Folder);
+  HBook1F(Hist->fEff[1]     ,"eff_1" ,Form("%s: eff[1]",Folder),10001,0,0.10001,Folder);
 
   return 0;
 }
@@ -233,8 +248,8 @@ int GaasqdQuickSim::BookPhotonHistograms(PhotonHist_t* Hist, const char* Folder)
   nbx = 100;
   nby = 100;
 
-  HBook1F(Hist->fStop        ,"stop"  ,Form("%s: stop"        ,Folder),  20,0, 20,Folder);
-  HBook1F(Hist->fNReflections,"nref"  ,Form("%s: nreflections",Folder), 200,0,200,Folder);
+  HBook1F(Hist->fStop        ,"stop"  ,Form("%s: stop"        ,Folder),  50,0, 50,Folder);
+  HBook1F(Hist->fNReflections,"nref"  ,Form("%s: nreflections",Folder), 500,0,500,Folder);
   HBook1F(Hist->fPath        ,"path"  ,Form("%s: path"        ,Folder),5000,0,  5,Folder);
   HBook2F(Hist->fYVsX        ,"y_vs_x",Form("%s: y vs x"      ,Folder),nbx,-dx,dx,nby,-dy,dy,Folder);
 
@@ -248,6 +263,8 @@ int GaasqdQuickSim::BookHistograms() {
   char folder_name[200];
 
   TFolder* hist_folder = (TFolder*) fFolder->FindObject("Hist");
+
+  TH1::SetDefaultSumw2(kTRUE);
 //-----------------------------------------------------------------------------
 // event histograms
 //-----------------------------------------------------------------------------
@@ -295,7 +312,8 @@ int GaasqdQuickSim::FillEventHistograms(EventHist_t* Hist) {
 
   double eff = fNDetPhotons/fNPhotons;
 
-  Hist->fEff->Fill(eff);
+  Hist->fEff[0]->Fill(eff);
+  Hist->fEff[1]->Fill(eff);
 
   return 0;
 }
@@ -339,6 +357,182 @@ int GaasqdQuickSim::FillHistograms(const char* Mode) {
 }
 
 //-----------------------------------------------------------------------------
+// planes 0,1 : low and high X; 2,3: low and high Y; 4,5: bottom and top (Z)
+//-----------------------------------------------------------------------------
+int GaasqdQuickSim::SimulateReflection(TTrajectoryPoint* Point, int IPlane) {
+  int stop(0);
+
+  int ipl = IPlane / 2;
+
+  TVector3* p_dir = Point->GetDirection();
+
+  double n0 = (*p_dir)[ipl];
+
+  if (fMirror[IPlane] != 0) {
+//-----------------------------------------------------------------------------
+// the side is a mirror - re
+//-----------------------------------------------------------------------------
+    (*p_dir)[ipl] = -n0;
+  }
+  else {
+    double sinalp = sqrt(1-n0*n0);
+  
+    if (sinalp < fRefrIndAir/fRefrIndGaAs) {
+					// photon exits  - angle too close to 90 deg
+      stop = 10+IPlane;
+    }
+    else {
+//-----------------------------------------------------------------------------
+// simulate reflection	
+// a) check it a photon undergoes the geometric reflection
+//-----------------------------------------------------------------------------
+      double rn    = fRn->Rndm();
+      if (rn < fReflProb) {
+	(*p_dir)[ipl] = -n0;
+      }
+      else {
+//-----------------------------------------------------------------------------
+// diffuse scattering - in half of all cases the photon exits the crystal
+//-----------------------------------------------------------------------------
+	double dir[3];
+	fRn->Sphere(dir[0],dir[1],dir[2],1);
+	if (dir[ipl]*n0 > 0) {
+					// photon exits after the diffuse scattering
+	  stop = 20+IPlane;
+	}
+	else {
+					// photon continues with new direction
+	  p_dir->SetXYZ(dir[0],dir[1],dir[2]);
+	}
+      }
+    }
+  }
+  return stop;
+}
+
+
+//-----------------------------------------------------------------------------
+// stop = -1: photon got within acceptance of the fiber, but got reflected
+// and didn't get out
+int GaasqdQuickSim::SimulateDetector(TTrajectoryPoint* Point, Detector_t* Det) {
+  int stop(0);
+  
+  double dx, dy, dz;
+  
+  dx = Point->X()-Det->fOffsetX;
+  dy = Point->Y()-Det->fOffsetY;
+  dz = Point->Z()-Det->fOffsetZ;
+
+  TVector3* p_dir = Point->GetDirection();
+
+  int    ipl    = Det->fSide / 2;
+  double n0     = (*p_dir)[ipl];
+  double sinalp = sqrt(1-n0*n0);
+  
+  
+  if (fDebugLevel > 0) {
+    printf("GaasqdQuickSim::SimulateDetector: Det->fType, Det->fSide, dx, dy, dz = %3i %3i %12.5f %12.5f %12.5f\n",
+	   Det->fType,Det->fSide,dx,dy,dz);
+  }
+
+  if ((Det->fSide == 0) || (Det->fSide == 1)) {
+
+    if (fDebugLevel > 0) {
+      printf("GaasqdQuickSim::SimulateDetector: Det->fDy, Det->fDz = %12.5f %12.5f\n",Det->fDy,Det->fDz);
+    }
+
+    if ((fabs(dy) < Det->fDy) && (fabs(dz) < Det->fDz)) {
+      if (Det->fType == 0) {
+//-----------------------------------------------------------------------------
+// photodiode - any photon reaching it stops
+//-----------------------------------------------------------------------------
+	stop = 1;
+      }
+      else {
+//-----------------------------------------------------------------------------
+// fiber - to get detected, a photon needs to actually get out
+//-----------------------------------------------------------------------------
+	if (sinalp < fRefrIndAir/fRefrIndGaAs) fStop = 1;
+	else {
+//-----------------------------------------------------------------------------
+// diffuse scattering - in half of all cases the photon exits the crystal
+//-----------------------------------------------------------------------------
+	  double dir[3];
+	  fRn->Sphere(dir[0],dir[1],dir[2],1);
+	  if (dir[ipl]*n0 > 0) {
+					// photon exits after diffuse scattering
+	    stop = 1;
+	  }
+	  else {
+					// photon continues with new direction
+	    p_dir->SetXYZ(dir[0],dir[1],dir[2]);
+	    stop = -1;
+	  }
+	}
+      }
+    }
+  }
+  else if ((Det->fSide == 2) || (Det->fSide == 3)) {
+    if ((fabs(dx) < Det->fDx) && (fabs(dz) < Det->fDz)) {
+      if (Det->fType == 0) stop = 1;
+      else {
+//-----------------------------------------------------------------------------
+// fiber
+//-----------------------------------------------------------------------------
+	if (sinalp < fRefrIndAir/fRefrIndGaAs) fStop = 1;
+	else {
+//-----------------------------------------------------------------------------
+// diffuse scattering - in half of all cases the photon exits the crystal
+//-----------------------------------------------------------------------------
+	  double dir[3];
+	  fRn->Sphere(dir[0],dir[1],dir[2],1);
+	  if (dir[ipl]*n0 > 0) {
+	    stop = 1;
+	  }
+	  else {
+					// photon continues with new direction
+	    p_dir->SetXYZ(dir[0],dir[1],dir[2]);
+	    stop = -1;
+	  }
+	}
+      }
+    }
+  }
+  else if ((Det->fSide == 4) || (Det->fSide == 5)) {
+    if ((fabs(dx) < Det->fDx) && (fabs(dy) < Det->fDy)) {
+      if (Det->fType == 0) stop = 1;
+      else {
+//-----------------------------------------------------------------------------
+// fiber
+//-----------------------------------------------------------------------------
+	if (sinalp < fRefrIndAir/fRefrIndGaAs) fStop = 1;
+	else {
+//-----------------------------------------------------------------------------
+// diffuse scattering - in half of all cases the photon exits the crystal
+//-----------------------------------------------------------------------------
+	  double dir[3];
+	  fRn->Sphere(dir[0],dir[1],dir[2],1);
+	  if (dir[ipl]*n0 > 0) {
+	    stop = 1;
+	  }
+	  else {
+					// photon continues with new direction
+	    p_dir->SetXYZ(dir[0],dir[1],dir[2]);
+	    stop = -1;
+	  }
+	}
+      }
+    }
+  }
+
+  if (fDebugLevel > 0) {
+    printf("GaasqdQuickSim::SimulateDetector: END stop = %3i\n",stop);
+  }
+
+  return stop;
+}
+
+//-----------------------------------------------------------------------------
 // return code:
 // ------------
 // fStop = 1: photon hits the photodiode
@@ -346,8 +540,8 @@ int GaasqdQuickSim::FillHistograms(const char* Mode) {
 //-----------------------------------------------------------------------------
 int GaasqdQuickSim::TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol) {
 
-  double            x, y, z, nx, ny, nz, r, s, sx, sy, sz, smin, p;
-  int               reflection;
+  double            x, y, z, nx, ny, nz, s, sx, sy, sz, smin, p;
+  int               reflection_side;
   TTrajectoryPoint* tp;
 
   tp = &fLastPoint;
@@ -364,6 +558,11 @@ int GaasqdQuickSim::TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol) {
 
   fNReflections = 0;
 
+  if (fDebugLevel > 0) {
+    printf("GaasqdQuickSim::TracePhoton : Start :  fStop = %3i\n",fStop);
+    tp->Print();
+  }
+
   while (fStop == 0) {
 					// find next relection
 					// calculate path till the X-wall
@@ -374,36 +573,69 @@ int GaasqdQuickSim::TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol) {
     ny = tp->Ny();
     nz = tp->Nz();
 
+    smin = 0;
+
     double deltax, deltay, deltaz;
     
+    sx = 1.e12;
     if (nx > 0) deltax = ( xhsize-x);
     else        deltax = (-xhsize-x);
-    sx = deltax/nx;                     // always positive
+    if (nx != 0) sx = deltax/nx;                     // always positive
 					// calculate path till the Y-wall
+    sy = 1.e12;
     if (ny > 0) deltay = ( yhsize-y);
     else        deltay = (-yhsize-y);
-    sy = deltay/ny;
+    if (ny != 0) sy = deltay/ny;
 					// calculate path till the Z-wall
+    sz = 1.e12;
     if (nz > 0) deltaz = ( zhsize-z);
     else        deltaz = (-zhsize-z);
-    sz = deltaz/nz;
-					// flag the wall reached first
+    if (nz != 0) sz = deltaz/nz;
+    
+    if (fDebugLevel > 0) printf(" sx,sy,sz = %12.5e %12.5e %12.5e\n",sx,sy,sz);
+//-----------------------------------------------------------------------------
+// flag the side reached first
+//-----------------------------------------------------------------------------
     if (sx < sy) {
-      if (sx < sz) { reflection = 1; smin = sx; }
-      else         { reflection = 3; smin = sz; }
+      if (sx < sz) {
+	smin = sx;
+	if (nx < 0) reflection_side = 0;
+	else        reflection_side = 1;
+      }
+      else         {
+	smin = sz;
+	if (nz < 0) reflection_side = 4;
+	else        reflection_side = 5;
+      }
     }
     else {
-      if (sy < sz) { reflection = 2; smin = sy; }
-      else         { reflection = 3; smin = sz; }
+      if (sy < sz) {
+	smin = sy;
+	if (ny < 0) reflection_side = 2;
+	else        reflection_side = 3;
+      }
+      else         {
+	smin = sz;
+	if (nz < 0) reflection_side = 4;
+	else        reflection_side = 5;
+      }
     }
+
+    if (fDebugLevel > 0) printf(" reflection_side, smin = %3i %12.5e\n",reflection_side,smin);
 //-----------------------------------------------------------------------------
 // model absorption
 //-----------------------------------------------------------------------------
-    double abs_len = fRn->Exp(fAbsLength);
-    if (abs_len < smin) {
-      fStop = 2;
-      smin  = abs_len;
+    double abs_len(1.e12);
+    
+    if (fAbsLength > 0) {
+      abs_len = fRn->Exp(fAbsLength);
+      if (abs_len < smin) {
+	fStop = 2;
+	smin  = abs_len;
+      }
     }
+
+    if (fDebugLevel > 0) printf(" fStop, abs_len, smin = %3i %12.5e %12.5e\n",fStop, abs_len, smin);
 //-----------------------------------------------------------------------------
 // update coordinates
 //-----------------------------------------------------------------------------
@@ -415,168 +647,48 @@ int GaasqdQuickSim::TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol) {
     
     tp->SetPoint(x,y,z,nx,ny,nz,s,p);
 
+    if (fDebugLevel > 0) {
+      printf("GaasqdQuickSim::TracePhoton : updated coordinates, fStop = %3i\n",fStop);
+      tp->Print();
+    }
+
     if (fStop != 0)                                         goto END_OF_PHOTON_SIM;
 //-----------------------------------------------------------------------------
-// photon didn't get absorbed, handle reflections 
+// photon didn't get absorbed, see if it ended up in one of detectors
+// sides 0,1: X, 2,3: Y, 4,5: Z
 //-----------------------------------------------------------------------------
-    if (reflection == 1) {
+    for (int i=0; i<fNDetectors; i++) {
+      Detector_t* det = fDetector[i];
 //-----------------------------------------------------------------------------
-// reflection from X=const surface, check if the photon exits 
+// check intersection with the detector, to simplify things,
+// the side is stored in the detector 
 //-----------------------------------------------------------------------------
-      double sinalp = sqrt(ny*ny+nz*nz);
-      if (sinalp < fRefrIndAir/fRefrIndGaAs) {
-					// photon exits in X - angle too close to 90 deg
-	fStop = 3;
+      if (det->fSide == reflection_side) {
+	fStop = SimulateDetector(tp,det);
       }
-      else {
-					// check it a photon gets lost due to reflection inefficiency
-	r    = fRn->Rndm();
-	if (r < fReflProb) {
-	  tp->GetDirection()->SetX(-nx);
-	}
-	else {
-//-----------------------------------------------------------------------------
-// diffused scattering - in half of all cases the photon exist the crystal
-//-----------------------------------------------------------------------------
-	  double nx1, ny1, nz1;
-	  fRn->Sphere(nx1,ny1,nz1,1);
-	  if (nx1*deltax > 0) {
-					// photon exits in X 
-	    fStop = 13;
-	  }
-	  else {
-					// photon continues with new direction
-	    tp->GetDirection()->SetXYZ(nx1,ny1,nz1);
-	  }
-	}
-      }
+      if (fStop > 0)                                       goto END_OF_PHOTON_SIM;
     }
-    else if (reflection == 2) {
 //-----------------------------------------------------------------------------
-// reflection from Y=const surface, flip sign on NY
+// the photon didn't get into any of photodetectors, simulate reflection
 //-----------------------------------------------------------------------------
-      double sinalp = sqrt(nx*nx+nz*nz);
-      if (sinalp < fRefrIndAir/fRefrIndGaAs) {
-					// photon exits in Y - angle too close to 90 deg
-	fStop = 4;
-      }
-      else {
-	r    = fRn->Rndm();
-	if (r < fReflProb) {
-	  tp->GetDirection()->SetY(-ny);
-	}
-	else {
-//-----------------------------------------------------------------------------
-// simulate diffused scattering - in half of all cases the photon exist the crystal
-//-----------------------------------------------------------------------------
-	  double nx1, ny1, nz1;
-	  fRn->Sphere(nx1,ny1,nz1,1);
-	  if (ny1*deltay > 0) {
-					// photon exits in Y due to scattering
-	    fStop = 14;
-	  }
-	  else {
-					// photon continues with the new direction
-	    tp->GetDirection()->SetXYZ(nx1,ny1,nz1);
-	  }
-	}
-      }
+    if (fStop == 0) {
+      fStop = SimulateReflection(tp,reflection_side);
     }
-    else if (reflection == 3) {
-//-----------------------------------------------------------------------------
-// Z-boundary, flip sign on NY
-//-----------------------------------------------------------------------------
-      double sinalp = sqrt(nx*nx+nz*nz);
-	
-      if (tp->Nz() > 0) {
-//-----------------------------------------------------------------------------
-// on the top plane there is a photodiode - check if the photon hits it
-//-----------------------------------------------------------------------------
-	double dx = tp->X()-fDiodePos[0];
-	double dy = tp->Y()-fDiodePos[1];
-
-	TGeoBBox* diode_box = (TGeoBBox*) fDiode->GetShape();
-	
-	if ( (fabs(dx) < diode_box->GetDX()) &&
-	     (fabs(dy) < diode_box->GetDY())    ) {
-	  fStop = 1;
-	}
-	else {
-//-----------------------------------------------------------------------------
-// photon misses the photodiode, consider reflection from the top surface
-//-----------------------------------------------------------------------------
-	  if (sinalp < fRefrIndAir/fRefrIndGaAs) {
-					// photon exists through the top surface
-	    fStop = 5;
-	  }
-	  else {
-//-----------------------------------------------------------------------------
-// simulate diffused scattering - in half of all cases the photon exist the crystal
-//-----------------------------------------------------------------------------
-	    r  = fRn->Rndm();
-	    if (r < fReflProb) {
-	      tp->GetDirection()->SetZ(-nz);
-	    }
-	    else {
-	      double nx1, ny1, nz1;
-	      fRn->Sphere(nx1,ny1,nz1,1);
-	      if (nz1*deltaz > 0) {
-					// photon exits through the top due to scattering
-		fStop = 15;
-	      }
-	      else {
-					// photon continues with the new direction
-		tp->GetDirection()->SetXYZ(nx1,ny1,nz1);
-	      }
-	    }
-	  }
-	}
-      }
-      else {
-//-----------------------------------------------------------------------------
-// reflection from the bottom surface
-//-----------------------------------------------------------------------------
-	if (fBottomMirror != 0) {
-					// always mirror reflection, no losses
-	  tp->GetDirection()->SetZ(-nz);
-	}
-	else {
-	  double min_sinalp = fRefrIndEpoxy/fRefrIndGaAs;
-	  if (sinalp < min_sinalp) {
-	    // photon exists through the bottom surface
-	    fStop = 6;
-	  }
-	  else {
-	    //-----------------------------------------------------------------------------
-	    // simulate diffused scattering - in half of all cases the photon exist the crystal
-	    //-----------------------------------------------------------------------------
-	    r  = fRn->Rndm();
-	    if (r < fReflProb) {
-	      tp->GetDirection()->SetZ(-nz);
-	    }
-	    else {
-	      double nx1, ny1, nz1;
-	      fRn->Sphere(nx1,ny1,nz1,1);
-	      if (nz1*deltaz > 0) {
-		// photon exits through the top due to scattering
-		fStop = 16;
-	      }
-	      else {
-		// photon continues with the new direction
-		tp->GetDirection()->SetXYZ(nx1,ny1,nz1);
-	      }
-	    }
-	  }
-	}
-      }
+    else if (fStop < 0) {
+					// photon reflected from the fiber
+      fStop = 0;
     }
-
+      
   END_OF_PHOTON_SIM:
     if (fStop == 0) fNReflections++;
 //-----------------------------------------------------------------------------
 // to avoid infinite loops, limite max number of reflections
 //-----------------------------------------------------------------------------
-    if (fNReflections >= fMaxNReflections) fStop = 10;
+    if (fNReflections >= fMaxNReflections) fStop = 9;
+  }
+
+  if (fDebugLevel > 0) {
+    printf("GaasqdQuickSim::TracePhoton END: fStop,fNReflections: %3i %3i\n",fStop,fNReflections);
   }
 
   return 0;
@@ -584,17 +696,28 @@ int GaasqdQuickSim::TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol) {
 
 
 //-----------------------------------------------------------------------------
+int GaasqdQuickSim::BeginJob() {
+  if (fFirstCall) {
+    BookHistograms();
+    fFirstCall = 0;
+  }
+  else {
+    ResetHistograms(0,"all");
+  }
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
 int GaasqdQuickSim::Run(double Dist, int NEvents) {
 
-    float  rn[2];  // to generate phi and theta
+  float  rn[2];  // to generate phi and theta
 
-    double nx, ny, nz, theta, phi; // , x, y;
+  double nx, ny, nz; // , x, y;
 
-
-  ResetHistograms(0,"all");
-
-  // simulate events, trace photons, andcount the number of detected oned
-
+  BeginJob();
+//-----------------------------------------------------------------------------
+// simulate events, trace photons, and count the number of detected ones
+//-----------------------------------------------------------------------------
   for (int ievent=0; ievent<NEvents; ievent++) {
     fEventNumber      = ievent;
     if (fDebugLevel > 0) {
@@ -619,15 +742,17 @@ int GaasqdQuickSim::Run(double Dist, int NEvents) {
     }
     else if (fPosMode == 1) {
 //-----------------------------------------------------------------------------
-// randomly within the volume...
+// randomly within the 50 um beam - it is an approximation
 //-----------------------------------------------------------------------------      
-      fX0 = 2*(rn[0]-0.5)*cPos->GetDX();
-      fY0 = 2*(rn[1]-0.5)*cPos->GetDY();
+      fX0 = fDiodePos[0]+Dist;
+      fY0 = 2*(rn[1]-0.5)*0.0050;
       fZ0 = 2*(rn[2]-0.5)*cPos->GetDZ();
     }
       					// number of photons in this event
-    
-    fNPhotons    = fRn->Poisson(fNPhMean);
+
+    if (fNPhMean > 0) fNPhotons    = fRn->Poisson(fNPhMean);
+    else              fNPhotons    = -fNPhMean;
+   
     fNDetPhotons = 0;
 
     if (fDebugLevel > 0) {
@@ -642,12 +767,16 @@ int GaasqdQuickSim::Run(double Dist, int NEvents) {
 
       fRn->RndmArray(2,rn);
 
-      phi   = TMath::TwoPi()*rn[0];
-      theta = TMath::ASin(2*(rn[1]-0.5));
+      double phi   = TMath::TwoPi()*rn[0];
+      // double theta = TMath::ASin(2*(rn[1]-0.5));
     
-      nx  = TMath::Cos(theta)*TMath::Cos(phi);
-      ny  = TMath::Cos(theta)*TMath::Sin(phi);
-      nz  = TMath::Sin(theta);     
+      // nx  = TMath::Cos(theta)*TMath::Cos(phi);
+      // ny  = TMath::Cos(theta)*TMath::Sin(phi);
+      // nz  = TMath::Sin(theta);     
+					// debugging
+      nx  = TMath::Cos(phi);
+      ny  = 0.;
+      nz  = TMath::Sin(phi);
 //-----------------------------------------------------------------------------
 // trace photon till it reaches the photodiode of gets absorbed, reflecting
 // it from the other faces
@@ -680,10 +809,10 @@ int GaasqdQuickSim::Run(double Dist, int NEvents) {
 //-----------------------------------------------------------------------------
 // on exit, print efficiency
 //-----------------------------------------------------------------------------
-  double eff    = fHist.fEvent[0]->fEff->GetMean();
-  double efferr = fHist.fEvent[0]->fEff->GetMeanError();
+  double eff0 = fHist.fEvent[0]->fEff[0]->GetMean();
+  double eff1 = fHist.fEvent[0]->fEff[1]->GetMean();
 
-  printf(" >> eff, efferr = %12.6f %12.6f\n",eff, efferr);
+  printf(" >> eff[0], eff[1] = %12.5e %12.5e\n",eff0, eff1);
   return 0;
 }
   

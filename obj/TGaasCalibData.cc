@@ -49,7 +49,7 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
   }
 
   int     ich, used, polarity, ns, min_s0, max_s0, min_s1, max_s1, win ;
-  float   max_p2p, max_thr, gain, min_q, min_width;
+  float   max_p2p, max_thr, gain, min_q, min_width, sampling_time;
 
   fNChannels = 0;
   
@@ -58,20 +58,21 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
     if (c[0] != '#') {
       ungetc(c[0],f);
 					// parse line
-      fscanf(f,"%i" ,&ich      );
-      fscanf(f,"%i" ,&used     );
-      fscanf(f,"%i" ,&ns       );
-      fscanf(f,"%i" ,&polarity );
-      fscanf(f,"%i" ,&min_s0   );
-      fscanf(f,"%i" ,&max_s0   );
-      fscanf(f,"%i" ,&min_s1   );
-      fscanf(f,"%i" ,&max_s1   );
-      fscanf(f,"%f" ,&max_p2p  );
-      fscanf(f,"%f" ,&max_thr  );
-      fscanf(f,"%f" ,&min_q    );
-      fscanf(f,"%i" ,&win      );
-      fscanf(f,"%f" ,&gain     );
-      fscanf(f,"%f" ,&min_width);
+      fscanf(f,"%i" ,&ich          );
+      fscanf(f,"%i" ,&used         );
+      fscanf(f,"%i" ,&ns           );
+      fscanf(f,"%i" ,&polarity     );
+      fscanf(f,"%i" ,&min_s0       );
+      fscanf(f,"%i" ,&max_s0       );
+      fscanf(f,"%i" ,&min_s1       );
+      fscanf(f,"%i" ,&max_s1       );
+      fscanf(f,"%f" ,&max_p2p      );
+      fscanf(f,"%f" ,&max_thr      );
+      fscanf(f,"%f" ,&min_q        );
+      fscanf(f,"%i" ,&win          );
+      fscanf(f,"%f" ,&gain         );
+      fscanf(f,"%f" ,&min_width    );
+      fscanf(f,"%f" ,&sampling_time);   // in ps
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
@@ -89,11 +90,12 @@ int TGaasCalibData::InitReadoutMap(int RunNumber, TCalibManager* Manager) {
       fChannel[fNChannels].fPulseIntWindow = win;
       fChannel[fNChannels].fGain           = gain;
       fChannel[fNChannels].fMinWidth       = min_width;
+      fChannel[fNChannels].fSamplingTime   = sampling_time*1.e-12; // convert to seconds
       
       fNChannels++;
     }
 					// skip line
-    fgets(c,100,f);
+    fgets(c,1000,f);
   }
 
   fclose(f);

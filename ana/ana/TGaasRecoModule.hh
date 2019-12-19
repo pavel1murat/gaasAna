@@ -45,12 +45,14 @@ public:
 					// so far, assume one channel
     TH2F*   fWaveform[2]  ;
     TH2F*   fWf2          ;
+    TH2F*   fWf2ns        ;             // same as Wf2 but in ns
     TH1F*   fLastWaveform ;
-    TH1F*   fQ[2];			// charge
-    TH1F*   fQ1[2];			// charge, corrected
+    TH1F*   fQ[2];			// charge, on the amplifier output [mV*channels] 
+    TH1F*   fQ1[2];			// charge, corrected to the amplifier input [mV*channels]
+    TH1F*   fQPc;			// charge, on the amplifier input [pC]
     TH1F*   fV0Max[2];			// max ampl, raw
     TH1F*   fV1Max[2];			// max ampl, baseline subtracted
-    TH1F*   fV2Max;			// max ampl/gain, baseline subtracted
+    TH1F*   fV2Max;			// max ampl/gain, baseline subtracted, mV
     TH1F*   fT0;			// T0
     TH1F*   fPedestal[2];
     TH1F*   fSigmaPed[2];
@@ -59,6 +61,7 @@ public:
     TH1F*   fLeSlope;                   // leading edge slope
     TH1F*   fTeSlope;                   // trailing edge slope
     TH1F*   fWidth;
+    TH1F*   fWidthNs;
     TH2F*   fW_v_H;                     // width vs height
   };
 

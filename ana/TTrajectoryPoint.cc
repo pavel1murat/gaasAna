@@ -105,12 +105,12 @@ void TTrajectoryPoint::Clear(Option_t* opt) {
 //_____________________________________________________________________________
 void TTrajectoryPoint::Print(Option_t* opt) const {
 
-  if (strstr(opt,"banner") != 0) {
+  if ((strstr(opt,"banner") != 0) || (opt[0] == 0)) {
     printf("         X          Y           Z           Nx         Ny ");
     printf("         Nz       P(total)      S  \n");
   }
 
-  if ((strstr(opt,"data") != 0) || (strlen(opt) == 0)) {
+  if ((strstr(opt,"data") != 0) || (opt[0] == 0)) {
     printf("%11.4f %11.4f %11.4f %11.4f %11.4f %11.4f %11.4f %11.4f\n",
 	   fPosition.X(),
 	   fPosition.Y(),

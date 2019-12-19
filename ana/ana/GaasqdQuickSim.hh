@@ -16,7 +16,28 @@
 
 class GaasqdQuickSim : public TNamed {
 public:
+  
+  struct Detector_t {
+    double fDx;
+    double fDy;
+    double fDz;
+    
+    TGeoVolume*      fVol;
 
+    int    fSide;
+
+    double fOffsetX;
+    double fOffsetY;
+    double fOffsetZ;
+
+    int    fType; // 0:photodiode  1:fiber
+  };
+  
+  struct Side_t {
+    int fIndex;    // X(0,1),Y(2,3),Z(4,5)
+    TObjArray*  fDetector;
+  };
+  
   enum  {
 	 kNEventHistSets  = 10,
 	 kNPhotonHistSets = 10,
@@ -32,7 +53,7 @@ public:
   struct EventHist_t {
     TH1F*   fNPhotons;
     TH1F*   fNDetPhotons;
-    TH1F*   fEff;
+    TH1F*   fEff[2];
   };
 					// analysis hist structure
   struct Hist_t {
@@ -51,6 +72,9 @@ public:
   double           fDiodeDz;
   
   double           fDiodeDispX;		// diode displacement in X
+
+  int              fNDetectors;
+  Detector_t*      fDetector[100];      // should be enough
   
   TGeoManager*     fGeoManager;
 
@@ -58,6 +82,10 @@ public:
   TGeoVolume*      fDiode;
 
   TGeoNode*        fDiodeNode;
+
+  TGeoMedium*      fMedAir;
+  TGeoMedium*      fMedGaAs;
+  TGeoMedium*      fMedInGaAs;
 					// as returned by ROOT
   const double*    fDiodePos;
 
@@ -101,14 +129,15 @@ public:
   double           fReflProb;		
   double           fPhotoEff;
 
-  int              fBottomMirror;
+  int              fMirror[6];
+  int              fFirstCall;
 //-----------------------------------------------------------------------------
 //public:
 //-----------------------------------------------------------------------------
 public:
 					// defaults: N1816-PCBGBAC-E2
   
-  GaasqdQuickSim (double DiodeDx=0.0025, double DiodeDy = 0.0150);
+  GaasqdQuickSim ();
   ~GaasqdQuickSim(); 
 //-----------------------------------------------------------------------------
 //
@@ -133,8 +162,14 @@ public:
   int  FillPhotonHistograms(PhotonHist_t* Hist);
   int  FillHistograms      (const char*   Mode);
 
+  int  InitGeometry(double* Sensor, Detector_t* Det, int NDet);
   int  Run(double Dist, int Nevents = 1);
-  int  TracePhoton(TTrajectoryPoint* Start, TGeoBBox* Vol);
+  int  BeginJob();
+
+  int  TracePhoton       (TTrajectoryPoint* Start, TGeoBBox* Vol);
+  int  SimulateReflection(TTrajectoryPoint* Point, int IPlane);
+  int  SimulateDetector  (TTrajectoryPoint* Point, Detector_t* Det);
+
 //-----------------------------------------------------------------------------
 // the following helper methods allow to save 1 line per request, 
 // which in case of 100's booked histograms is a non-negligible number

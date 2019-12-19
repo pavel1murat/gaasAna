@@ -21,6 +21,7 @@ public:
   int             fPulseIntWindow; 
   float           fGain          ;
   float           fMinWidth      ;     // min width of a type#2 pulse
+  float           fSamplingTime  ;     // sampling time
 
   TGaasCalibChannel() {}
   ~TGaasCalibChannel() {}
@@ -30,8 +31,9 @@ public:
   int NSamples() { return fNSamples; }
   int Polarity() { return fPolarity; }
 
-  float MinQ    () const { return fMinQ;     }
-  float MinWidth() const { return fMinWidth; }
+  float MinQ        () const { return fMinQ;         }
+  float MinWidth    () const { return fMinWidth;     }
+  float SamplingTime() const { return fSamplingTime; }
 
   ClassDef(TGaasCalibChannel,1)
 };
