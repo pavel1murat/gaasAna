@@ -32,6 +32,15 @@ public:
   TGaasHeaderBlock();
   virtual ~TGaasHeaderBlock();
 //-----------------------------------------------------------------------------
+// accessors
+//-----------------------------------------------------------------------------
+  const char* RunStartTime() { return fRunStartTime.Data(); }
+  const char* RunEndTime  () { return fRunEndTime.Data()  ; }
+  int         Epoch       () { return fEpoch; }
+  int         USec        () { return fUSec;  }
+  int         PSec        () { return fPSec;  }
+  int         DeltaT      () { return fDeltaT;}
+//-----------------------------------------------------------------------------
 // overloaded methods of TObject
 //-----------------------------------------------------------------------------
   virtual void    Clear(Option_t* opt = "");

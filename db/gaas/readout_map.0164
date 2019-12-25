@@ -3,7 +3,7 @@
 # Ampl: MINIC
 # run 164: integrate within 100 channels
 #
-# ch# used  ns  pol minS[0] maxS[0] minS[1] maxS[1] maxP2P maxThr   MinQ  Win   gain MinW  time/samp
+# ch# used  ns  pol minS[0] maxS[0] minS[1] maxS[1] maxP2P maxThr   MinQ  Win  gain  MinW time/samp
 #                                                     (V)    (V)			     (ps)   
 #---------------------------------------------------------------------------------------------------
     0   1  500  -1    0      140     280     499   400.   400.       3. +100    9.7   -1.    50.    

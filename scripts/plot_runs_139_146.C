@@ -15,6 +15,9 @@ namespace {
   
   float rn           [nruns] = {  139 ,   140 ,   141 ,  142 ,  143 , 144 , 145  , 146 };
   float dx           [nruns] = {    0.,  0.635,  1.270, 1.905,  2.54,   0., 0.635, 1.270};
+  // running rime
+
+  float run_time     [nruns] = { 1007.,  1567.,  1546., 1126., 1229., 2752., 2690., 3174};
 
   // integrated charges in mV*channels
 
@@ -32,9 +35,6 @@ namespace {
   float v2max_400    [nruns] = { 0.35 , 0.35 , 0.35 , 0.36 , 0.41 , 0.35 , 0.39 , 0.30 };
   float v2max_400_err[nruns] = { 0.005, 0.003, 0.003, 0.004, 0.005, 0.003, 0.006, 0.003};
   
-  // running rime
-
-  float run_time     [nruns] = { 1007.,  1567.,  1546., 1126., 1229., 2752., 2690., 3174};
 
   // numbers of events in the fitted histograms
   

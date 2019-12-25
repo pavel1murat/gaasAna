@@ -15,8 +15,6 @@ except getopt.GetoptError, e:
 	sys.stdout.flush()
 	sys.exit(1)
 
-
-
 file = ''
 for key, val in optlist:
 	if key == '--file':

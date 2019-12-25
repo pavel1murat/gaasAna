@@ -123,10 +123,10 @@ void TGaasRecoModule::BookChannelHistograms(HistBase_t* HistR, const char* Folde
   HBook1F(Hist->fWidthNs     ,"width_ns","Width, ns"      ,  100     ,  0, 5e-9,  Folder);
 
   HBook2F(Hist->fW_v_H       ,"w_v_v2"  ,"W_v_V2"  ,1000     ,  0,    2, 100,0,100,Folder);
-  HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,500      ,-1e-3,1e-3, Folder);
-  HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,500      ,-25,   25,  Folder);
-  HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0",200      ,  0,    2,  Folder);
-  HBook1F(Hist->fSigmaPed[1] ,"sigped_1","SPed, mV",200      ,  0,  200,  Folder);
+  HBook1F(Hist->fPedestal[0] ,"ped_0"   ,"Ped_0"   ,1000     ,-1e-3,1e-3, Folder);
+  HBook1F(Hist->fPedestal[1] ,"ped_1"   ,"Ped, mV" ,1000     ,-25,   25,  Folder);
+  HBook1F(Hist->fSigmaPed[0] ,"sigped_0","SigPed_0, mV",1000 ,  0,   10,  Folder);
+  HBook1F(Hist->fSigmaPed[1] ,"sigped_1","SigPed_1, mV",1000 ,  0,  200,  Folder);
   HBook1F(Hist->fP2P1[0]     ,"p2p1_0"  ,"P2P1_0"  ,200      ,  0,   10,  Folder);
   HBook1F(Hist->fP2P1[1]     ,"p2p1_1"  ,"P2P1_1"  ,200      ,  0, 1000,  Folder);
   HBook1F(Hist->fP2P2[0]     ,"p2p2_0"  ,"P2P2_0"  ,200      ,  0,   10,  Folder);
