@@ -710,7 +710,7 @@ int GaasqdQuickSim::BeginJob() {
 //-----------------------------------------------------------------------------
 int GaasqdQuickSim::Run(double Dist, int NEvents) {
 
-  float  rn[2];  // to generate phi and theta
+  float  rn[3];  // to generate phi and theta
 
   double nx, ny, nz; // , x, y;
 

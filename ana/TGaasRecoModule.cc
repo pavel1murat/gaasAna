@@ -505,7 +505,7 @@ int TGaasRecoModule::ReconstructChannel(TReadoutChannel* Channel, TGaasCalibChan
   
   double    sum, qn, q, q1, v, vmin, vmax, pedestal, slope, t0, t1, y, ey, mean, chi2;
   double    _PedSigma ; // , ped_mean;
-  int       found, min_cell, max_cell, min_cell_05, max_cell_05;
+  int       found, min_cell, max_cell, min_cell_05(-1), max_cell_05(-1);
   float     width;
 //-----------------------------------------------------------------------------
 // determine pedestal
