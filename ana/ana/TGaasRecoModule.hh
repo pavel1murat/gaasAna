@@ -11,7 +11,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 
-#include "Stntuple/base/HistBase_t.h"
+// #include "Stntuple/base/HistBase_t.h"
 #include "Stntuple/loop/TStnModule.hh"
 
 #include "gaasAna/obj/TGaasDataBlock.hh"

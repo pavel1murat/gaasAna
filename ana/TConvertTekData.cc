@@ -5,6 +5,12 @@
 // need to revise the data buffer dimensions for new files
 // ReadGaasData: single frame mode
 // ReadGaasDataNew: single frame mode
+// usage:
+// ------
+// x = new TConvertTekData()
+// x->ReadGaasData("/projects/gaas/data/2022-04-11",1000,"run_",2)
+//
+// 
 ///////////////////////////////////////////////////////////////////////////////
 #include <vector>
 #include <time.h>
@@ -156,6 +162,9 @@ int TConvertTekData::Parse(const TString* S, const char Del, TObjArray* Words) {
 //-----------------------------------------------------------------------------
 // Format = 1: Inifiniscope (Albany   data)
 // Format = 2: Tektronix    (Fermilab data)
+//
+// FnPattern : not used
+// Format    : not used
 //-----------------------------------------------------------------------------
 int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char* FnPattern, int Format) {
 

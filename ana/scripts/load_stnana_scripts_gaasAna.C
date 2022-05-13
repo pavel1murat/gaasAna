@@ -15,10 +15,10 @@ int load_stnana_scripts_gaasAna() {
   TInterpreter* cint = gROOT->GetInterpreter();
   
   for (int i=0; script[i] != 0; i+=2) {
-    sprintf(macro,"%s/gaasAna/ana/scripts/%s",work_dir,script[i]);
-    if (! cint->IsLoaded(macro)) {
-      const char* env_var = script[i+1];
-      if (gSystem->Getenv(env_var) != 0) cint->LoadMacro(macro);
+    const char* dir = gSystem->Getenv(script[i+1]);
+    if (dir) {
+      sprintf(macro,"%s/gaasAna/ana/scripts/%s",dir,script[i]);
+      if (! cint->IsLoaded(macro)) cint->LoadMacro(macro);
     }
   }
   
