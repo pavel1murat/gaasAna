@@ -1,6 +1,6 @@
 #+startup:fold
 * ------------------------------------------------------------------------------
-* changes in the .rootrc                                                   
+* changes in .rootrc                                                         
 
   don't forget to define the env var $BUILD_DIR
   
@@ -13,8 +13,15 @@ Stnana.Database                $(BUILD_DIR)/gaasAna/db
 Stnana.InitGeometry            gaas_init_geometry
 #+end_code
 
-* calibration pass: "gaas_ana()/calib_pass=01" in the stnana parameters    
-* run number handling                                                      
+* running analysis code                                                      
+
+  stnana("file","","","gaasqd_fnal.001000_00000000","gaas_reco()/calib_pass=01")
+
+  the rest - standard
+* [0/1] calibration pass                                                     
+  "gaas_ana()/calib_pass=01" in the stnana parameters
+** TODO may want to use a different calib_pass for testing: "test"         
+* run number handling                                                        
 
  - assigned manually, for run=1000, need file:./../db/gaas/readout_map.1000
 
@@ -23,17 +30,16 @@ Stnana.InitGeometry            gaas_init_geometry
  - also need file:./../db/gaas/.pass_01 to include the run range for run = 1000
 
  
-
-* calibration tables:                                                      
+* calibration tables                                                         
 ** readout_map table                                                       
 
-   example: file:./../db/gaas/readout_map.1000
+   example: [[file:./../db/gaas/readout_map.1000]]
 
    15 numbers per channel, not fully sure if all of them are used properly
 
    (changed from 14)
 
 ** config:                                                                 
-   this is a script, need too recall if it is still in use, probably not
+   this is a script, need to recall if still in use, probably not
 
 * ------------------------------------------------------------------------------
