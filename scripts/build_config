@@ -1,6 +1,10 @@
 #!/bin/bash
 
+pushd ../Stntuple ; scripts/build_config ; popd ;
+
+
 dir=include
+if [ ! -d ../$dir/su2020 ] ; then mkdir -p ../$dir/su2020 ; fi
 
 package=gaasAna
 
@@ -17,16 +21,3 @@ for d in ana obj ; do
 	ln -s ../../$package/$d/$d ../$dir/$package/$d
     fi
 done
-
-#------------------------------------------------------------------------------
-# murat/Stntuple and its subpackages
-#------------------------------------------------------------------------------
-# if [ ! -d ../$dir/Stntuple ] ; then mkdir -p ../$dir/Stntuple ; fi
-# 
-# # for d in alg base gui loop mod obj val ; do
-# for d in alg base loop mod obj val ; do
-#     if [ ! -e ../$dir/Stntuple/$d ] ; then 
-# 	echo `pwd`$0 : creating symbolic link ../$dir/Stntuple/$d
-# 	ln -s ../../murat/Stntuple/$d/$d ../$dir/Stntuple/$d
-#     fi
-# done
