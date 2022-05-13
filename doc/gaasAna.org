@@ -1,0 +1,39 @@
+#+startup:fold
+* ------------------------------------------------------------------------------
+* changes in the .rootrc                                                   
+
+  don't forget to define the env var $BUILD_DIR
+  
+#+begin_code
++Stnana.Package                gaasAna
+#------------------------------------------------------------------------------
+# Stnana Calibration DB 
+#------------------------------------------------------------------------------
+Stnana.Database                $(BUILD_DIR)/gaasAna/db
+Stnana.InitGeometry            gaas_init_geometry
+#+end_code
+
+* calibration pass: "gaas_ana()/calib_pass=01" in the stnana parameters    
+* run number handling                                                      
+
+ - assigned manually, for run=1000, need file:./../db/gaas/readout_map.1000
+
+ - "readout_map" is the name of the calibration table, 1000 - the run number
+   
+ - also need file:./../db/gaas/.pass_01 to include the run range for run = 1000
+
+ 
+
+* calibration tables:                                                      
+** readout_map table                                                       
+
+   example: file:./../db/gaas/readout_map.1000
+
+   15 numbers per channel, not fully sure if all of them are used properly
+
+   (changed from 14)
+
+** config:                                                                 
+   this is a script, need too recall if it is still in use, probably not
+
+* ------------------------------------------------------------------------------
