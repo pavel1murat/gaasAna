@@ -13,6 +13,19 @@ Stnana.Database                $(BUILD_DIR)/gaasAna/db
 Stnana.InitGeometry            gaas_init_geometry
 #+end_code
 
+* converting .txt to stntuple                                                
+#+begin_quote
+  x = new TConvertTekData()
+  x->ReadGaasData("/projects/gaas/data/2022-04-11",1000,"run_",2)
+#+end_quote
+
+  - the first parameter is the directory where the input file is located
+    it is supposed to be named       qdgaas.fnal.001000.txt
+    with the run number encoded in the name
+    the output stntuple is created in the currect directory with the name gaasqd_fnal.001000_00000000 
+    and needs to be copied to the output directory manually
+    
+  - the last two parameters are not used 
 * running analysis code                                                      
 
   stnana("file","","","gaasqd_fnal.001000_00000000","gaas_reco()/calib_pass=01")
