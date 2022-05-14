@@ -1,5 +1,10 @@
 #+startup:fold
 * ------------------------------------------------------------------------------
+* How to build                                                               
+  - clone into su2020-based release and run scons
+
+  - no support of muse-based environment yet (in principle, that should be faster
+    as it requires only Stntuple and gaasAna to be local)
 * changes in .rootrc                                                         
 
   don't forget to define the env var $BUILD_DIR
