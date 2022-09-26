@@ -1,8 +1,8 @@
 #+startup:fold
 * ------------------------------------------------------------------------------
 * How to build                                                               
-  - clone into muse-based release and run scons
-
+  
+#+begin_src 
 git clone https://github.com/pavel1murat/gaasAna
 git clone https://github.com/pavel1murat/gaasG4
 git clone https://github.com/mu2e/Stntuple
@@ -11,6 +11,7 @@ setup muse
 muse backing Offline v10_17_00
 muse setup -q debug
 muse build
+#+end_src
 
 * changes in .rootrc                                                         
 
