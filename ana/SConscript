@@ -3,15 +3,15 @@
 # Script to build the files found in this directory.
 #------------------------------------------------------------------------------
 import os
-Import('env')
+Import('gaasAna_env')
 Import('stntuple_helper')
 #------------------------------------------------------------------------------
 # 2016-10-10: STNTUPLE link: add ROOT 'EG' library after 'Physics' library
 #------------------------------------------------------------------------------
 def local_build():
 
-    local_env = env.Clone()
-    rootlibs  = env['ROOTLIBS']
+    local_env = gaasAna_env.Clone()
+    rootlibs  = gaasAna_env['ROOTLIBS']
     
     if ( not ("EG"   in rootlibs)): rootlibs.insert(rootlibs.index("Physics")+1,"EG");
     if ( not ("Eve"  in rootlibs)): rootlibs.insert(rootlibs.index("EG"     )+1,"Eve");
@@ -39,7 +39,6 @@ def local_build():
     rootlibs.remove("Eve");
     rootlibs.remove("EG");
     rootlibs.remove("Geom");
-    
 #------------------------------------------------------------------------------
 # print "tmpdir:"+env['TMP_LIB_DIR']
 

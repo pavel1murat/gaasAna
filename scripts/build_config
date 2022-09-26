@@ -1,23 +1,36 @@
 #!/bin/bash
-
-pushd ../Stntuple ; scripts/build_config ; popd ;
-
-
-dir=include
-if [ ! -d ../$dir/su2020 ] ; then mkdir -p ../$dir/su2020 ; fi
-
-package=gaasAna
-
-# echo pwd  `pwd`
-
 #------------------------------------------------------------------------------
-# 'gaasAna' and its subpackages
+# BUILD_BASE doesn't replace the SATELLITE_RELEASE, need both
 #------------------------------------------------------------------------------
-if [ ! -d ../$dir/$package ] ; then mkdir -p ../$dir/$package ; fi
+base=$MUSE_WORK_DIR
 
-for d in ana obj ; do
-    if [ ! -e ../$dir/$package/$d ] ; then 
-	echo `pwd`$0 : creating symbolic link ../$dir/$package/$d
-	ln -s ../../$package/$d/$d ../$dir/$package/$d
+echo gaasAna::build_config_muse:000: MUSE_VERBOSE:.$MUSE_VERBOSE.
+
+cd $MUSE_WORK_DIR ; Stntuple/scripts/build_config_muse gaasAna ; cd ~- ;
+
+if [ ".$MUSE_VERBOSE" != ".0" ] ; then echo gaasAna::build_config_muse:001: $\0:$0 : \$PWD=$PWD  \$base=$base ; fi
+#------------------------------------------------------------------------------
+pkg=`echo $0 | awk -F / '{print $(NF-2)}'`
+
+        pkg_dir=$MUSE_WORK_DIR/$pkg
+pkg_include_dir=$base/include/$pkg
+
+echo gaasAna::build_config_muse:002: package=$pkg
+#------------------------------------------------------------------------------
+# package and its subpackages
+#------------------------------------------------------------------------------
+if [ ! -d $pkg_include_dir ] ; then
+    if [ $MUSE_VERBOSE != 0 ] ; then echo gaasAna::build_config:003: pwd=$pwd ; creating $base/include/$pkg ; fi
+    mkdir -p $pkg_include_dir
+fi
+#------------------------------------------------------------------------------
+# make symbolic links local, as they are 
+#------------------------------------------------------------------------------
+list_of_subpackages="ana obj"
+for d in $list_of_subpackages ; do
+    if [[ -e $base/include/$pkg ]] && [[ ! -e $base/include/$pkg/$d ]] ; then 
+	cmd="ln -s ../../$pkg/$d/$d $pkg_include_dir/$d"
+	if [ $MUSE_VERBOSE != 0 ] ; then echo `pwd`$0 : executing: $cmd ; fi
+	$cmd
     fi
 done

@@ -20,6 +20,7 @@
 #include "TPad.h"
 #include "TEnv.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 #include "Stntuple/loop/TStnAna.hh"
 #include "Stntuple/loop/TStnInputModule.hh"
