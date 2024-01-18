@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef murat_ana_TGaasSpmcAnaModule_hh
-#define murat_ana_TGaasSpmcAnaModule_hh
+#ifndef __gaasAna_ana_TGaasSpmcAnaModule_hh__
+#define __gaasAna_ana_TGaasSpmcAnaModule_hh__
 
 #include "TH1.h"
 #include "TH2.h"
@@ -16,10 +16,16 @@
 #include "Stntuple/obj/TStepPointMCBlock.hh"
 
 #include "Stntuple/base/TStnArrayI.hh"
-#include "Stntuple/base/HistBase_t.h"
 
 class TGaasSpmcAnaModule: public TStnModule {
 public:
+//-----------------------------------------------------------------------------
+// play a trick: pretend HistBase_t is an internal class !
+//-----------------------------------------------------------------------------
+  struct HistBase_t {
+    int     fHistBaseID;			// name to avoid confusions
+  };
+  // #include "Stntuple/base/HistBase_t.h"
 //-----------------------------------------------------------------------------
 //  histograms
 //-----------------------------------------------------------------------------

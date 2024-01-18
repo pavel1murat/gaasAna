@@ -237,7 +237,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
   fScopeEvent.fCpu          = 0;
   fScopeEvent.fStnVersion   = "v7_3_5";
 					// assume number of channels doesn't change within the run
-  fScopeEvent.fNChannels    = -1;
+  fScopeEvent.fNChannels    = 0;
   fScopeEvent.fRunStartTime = "undefined";
   fScopeEvent.fRunEndTime   = "undefined";
 
@@ -287,7 +287,6 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 //-----------------------------------------------------------------------------
 // read a .CSV file - so far, Tektronix format
 //-----------------------------------------------------------------------------
-  
   while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
 
     printf("line: %s",lineptr);
@@ -316,10 +315,10 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 	fReadoutMode = 0;                      // single frame readout
       }
 
-      TObjString* os2 = (TObjString*) words.At(2);
-      TObjArray w2;
+      // TObjString* os2 = (TObjString*) words.At(2);
+      // TObjArray w2;
 
-      fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
+      // fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
 //-----------------------------------------------------------------------------
 // here I'm assuming that the first sample read is always #1
 //-----------------------------------------------------------------------------
@@ -363,6 +362,7 @@ int TConvertTekData::ReadGaasData(const char* Dirname, int RunNumber, const char
 	fScopeEvent.fVOff2[ichannel] = strtof(os->String().Data(),nullptr);
 
 	ichannel++;
+        fScopeEvent.fNChannels += 1;
       }
       continue;
     }
@@ -513,7 +513,7 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
   fScopeEvent.fCpu          = 0;
   fScopeEvent.fStnVersion   = "v7_3_5";
 					// assume number of channels doesn't change within the run
-  fScopeEvent.fNChannels    = -1;
+  fScopeEvent.fNChannels    = 0;
   fScopeEvent.fRunStartTime = "undefined";
   fScopeEvent.fRunEndTime   = "undefined";
 
@@ -584,7 +584,6 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 //-----------------------------------------------------------------------------
 // read a .CSV file - so far, Tektronix format
 //-----------------------------------------------------------------------------
-  
   while (getline(&lineptr,(size_t*) &buflen,f) > 0) {
 
     printf("line: %s",lineptr);
@@ -604,11 +603,13 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
     if (s.Index("DATA:"     ) == 0) {
 
       int nw = Parse(&s,';',&words);
-
-      TObjString* os2 = (TObjString*) words.At(2);
+//-----------------------------------------------------------------------------
+// it looks that Tektronix 71xx has a slightly difffferent data format 
+//-----------------------------------------------------------------------------
+      //TObjString* os2 = (TObjString*) words.At(2);
       TObjArray w2;
 
-      fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
+      //      fScopeEvent.fNChannels = Parse(&os2->String(),',',&w2);
 //-----------------------------------------------------------------------------
 // here I'm assuming that the first sample read is always #1
 //-----------------------------------------------------------------------------
@@ -651,6 +652,7 @@ int TConvertTekData::ReadGaasDataNew(const char* Dirname, int RunNumber, const c
 	fScopeEvent.fVOff2[ichannel] = strtof(os->String().Data(),nullptr);
 
 	ichannel++;
+        fScopeEvent.fNChannels += 1;
       }
       continue;
     }
